@@ -45,7 +45,7 @@ HTTP layer:
 
 ## Project Layout
 
-```text
+
 ```text
 modern-http-server/
 ├── include/
@@ -67,9 +67,7 @@ modern-http-server/
 ├── CMakeLists.txt
 └── CMakePresets.json
 ```
-```
-```
-```
+
 
 ```
 ```
