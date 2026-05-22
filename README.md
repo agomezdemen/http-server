@@ -45,6 +45,8 @@ HTTP layer:
 
 ## Project Layout
 
+```text
+```text
 modern-http-server/
 ├── include/
 │   └── http_server/
@@ -64,7 +66,13 @@ modern-http-server/
 ├── cmake/
 ├── CMakeLists.txt
 └── CMakePresets.json
+```
+```
+```
+```
 
+```
+```
 ## Main Components
 
 ### File Descriptor Management
