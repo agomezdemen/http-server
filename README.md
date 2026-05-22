@@ -69,8 +69,6 @@ modern-http-server/
 ```
 
 
-```
-```
 ## Main Components
 
 ### File Descriptor Management
