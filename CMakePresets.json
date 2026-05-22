@@ -1,0 +1,100 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "prototype",
+      "displayName": "Prototype",
+      "description": "Fast development build with relaxed warnings.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "HTTP_BUILD_TESTS": "ON",
+        "HTTP_ENABLE_WERROR": "OFF",
+        "HTTP_ENABLE_SANITIZERS": "OFF",
+        "HTTP_ENABLE_LTO": "OFF"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "description": "Strict debug build with sanitizers.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "HTTP_BUILD_TESTS": "ON",
+        "HTTP_ENABLE_WERROR": "ON",
+        "HTTP_ENABLE_SANITIZERS": "ON",
+        "HTTP_ENABLE_LTO": "OFF"
+      }
+    },
+    {
+      "name": "profile",
+      "displayName": "Profile",
+      "description": "Optimized build with debug symbols for profiling.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "HTTP_BUILD_TESTS": "ON",
+        "HTTP_ENABLE_WERROR": "ON",
+        "HTTP_ENABLE_SANITIZERS": "OFF",
+        "HTTP_ENABLE_LTO": "OFF"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Fully optimized release build.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "HTTP_BUILD_TESTS": "OFF",
+        "HTTP_ENABLE_WERROR": "ON",
+        "HTTP_ENABLE_SANITIZERS": "OFF",
+        "HTTP_ENABLE_LTO": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "prototype",
+      "configurePreset": "prototype"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "profile",
+      "configurePreset": "profile"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "profile",
+      "configurePreset": "profile",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}
