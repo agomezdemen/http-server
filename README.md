@@ -49,7 +49,7 @@ HTTP layer:
 ```text
 modern-http-server/
 ├── include/
-│   └── http_server/
+│   └── server/
 │       ├── net/
 │       ├── io/
 │       ├── http/
@@ -147,6 +147,13 @@ Initial milestones:
 - Add basic HTTP request parsing
 - Add tests for parser and response serialization
 - Add benchmarks for request throughput
+
+Current repository status:
+
+- Buildable CMake skeleton
+- Public headers for each planned layer
+- Minimal placeholder implementations
+- CTest-based smoke tests for buffer, parser, and response types
 
 ## Long-Term Direction
 
