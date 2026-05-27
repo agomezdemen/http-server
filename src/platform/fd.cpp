@@ -1,11 +1,9 @@
 #include "../../include/platform/fd.h"
 #include <unistd.h>
 
-Fd::Fd() {
-  fd_ = -1;
-}
+Fd::Fd() : fd_{-1} {}
 
-Fd::Fd(int input_fd) : fd_{input_fd} {}
+Fd::Fd(int input_fd) noexcept : fd_{input_fd} {}
 
 Fd::Fd(Fd &&other) noexcept : fd_{other.fd_} {
   other.fd_ = -1;
@@ -29,15 +27,15 @@ Fd::~Fd() noexcept {
   }
 }
 
-bool Fd::valid() const noexcept {
+auto Fd::valid() const noexcept -> bool {
   return (fd_ != -1);
 }
 
-int Fd::get() const noexcept {
+auto Fd::get() const noexcept -> int {
   return fd_;
 }
 
-int Fd::release() noexcept {
+auto Fd::release() noexcept -> int {
   int fd_copy = fd_;
   fd_ = -1;
   return fd_copy;

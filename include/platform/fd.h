@@ -11,16 +11,16 @@ private:
   int fd_;
 
 public:
-  Fd();                                // empty constructor
-  explicit Fd(int);                   // value constructor
+  Fd() noexcept;                                // empty constructor
+  explicit Fd(int) noexcept;                   // value constructor
   Fd(Fd &&) noexcept;                 // constructor
   Fd(const Fd &) = delete;            // deleting copy constructor
-  Fd &operator=(const Fd &) = delete; // delting copy assignment
-  Fd &operator=(Fd &&) noexcept;      // move assignment
+  auto operator=(const Fd &) -> Fd& = delete; // delting copy assignment
+  auto operator=(Fd &&) noexcept -> Fd&;      // move assignment
   ~Fd() noexcept;                               // destructor
-  bool valid() const noexcept; // checks validity of the Fd object
-  int get() const noexcept; // get sthe current fd handle
-  int release() noexcept; // releases the resource
+  auto valid() const noexcept -> bool; // checks validity of the Fd object
+  auto get() const noexcept -> int; // get sthe current fd handle
+  auto release() noexcept -> int; // releases the resource
 };
 
 #endif
