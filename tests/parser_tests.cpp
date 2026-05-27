@@ -1,4 +1,1 @@
-auto main() -> int
-{
-    return 0;
-}
+#include "parser_tests.h"
