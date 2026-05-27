@@ -17,7 +17,7 @@ public:
   Fd(const Fd &) = delete;            // deleting copy constructor
   Fd &operator=(const Fd &) = delete; // delting copy assignment
   Fd &operator=(Fd &&) noexcept;      // move assignment
-  ~Fd() noexcept;                               // constructor
+  ~Fd() noexcept;                               // destructor
   bool valid() const noexcept; // checks validity of the Fd object
   int get() const noexcept; // get sthe current fd handle
   int release() noexcept; // releases the resource

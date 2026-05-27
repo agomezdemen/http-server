@@ -1,4 +1,4 @@
-#include "../../include/server/net/fd.h"
+#include "../../include/platform/fd.h"
 #include <unistd.h>
 
 Fd::Fd() {
@@ -29,15 +29,15 @@ Fd::~Fd() noexcept {
   }
 }
 
-
-bool valid() const noexcept {
+bool Fd::valid() const noexcept {
   return (fd_ != -1);
 }
 
-int get() const noexcept {
+int Fd::get() const noexcept {
   return fd_;
 }
-int release() noexcept {
+
+int Fd::release() noexcept {
   int fd_copy = fd_;
   fd_ = -1;
   return fd_copy;
