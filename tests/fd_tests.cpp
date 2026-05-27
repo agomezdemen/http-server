@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <utility>
 
-namespace {
+namespace server::platform::Fd{
   
   struct Pipe {
     int read;
