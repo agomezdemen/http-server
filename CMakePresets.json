@@ -83,6 +83,13 @@
   ],
   "testPresets": [
     {
+      "name": "prototype",
+      "configurePreset": "prototype",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
       "name": "debug",
       "configurePreset": "debug",
       "output": {

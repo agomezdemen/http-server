@@ -2,14 +2,15 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cerrno>
 #include <fcntl.h>
+#include <type_traits>
 #include <unistd.h>
 #include <utility>
 
-namespace server::platform::Fd{
+namespace {
   
   struct Pipe {
-    int read;
-    int write;
+    int read_end;
+    int write_end;
   };
 
   Pipe make_pipe() {
@@ -18,8 +19,8 @@ namespace server::platform::Fd{
     REQUIRE(::pipe(fds) == 0);
 
     return Pipe{
-      .read = fds[0],
-      .write = fds[1],
+      .read_end = fds[0],
+      .write_end = fds[1],
     };
   }
 
@@ -48,21 +49,21 @@ TEST_CASE("Fd constructed from raw fd owns the fd") {
   const auto pipe = make_pipe();
 
   {
-    Fd fd{pipe.read};
+    Fd fd{pipe.read_end};
 
     REQUIRE(fd.valid());
-    REQUIRE(fd.get() == pipe.read);
-    REQUIRE(fd_is_open(pipe.read));
+    REQUIRE(fd.get() == pipe.read_end);
+    REQUIRE(fd_is_open(pipe.read_end));
   }
 
-  REQUIRE(fd_is_closed(pipe.read));
+  REQUIRE(fd_is_closed(pipe.read_end));
 
-  REQUIRE(::close(pipe.write) == 0);
+  REQUIRE(::close(pipe.write_end) == 0);
 }
 
 TEST_CASE("Fd destructor closes owned fd") {
   const auto pipe = make_pipe();
-  const int raw_fd = pipe.read;
+  const int raw_fd = pipe.read_end;
 
   {
     Fd fd{raw_fd};
@@ -71,24 +72,24 @@ TEST_CASE("Fd destructor closes owned fd") {
     REQUIRE(fd_is_open(raw_fd));
   }
 
-  REQUIRE(fd_is_closed());
-  REQUIRE(::close(pipe.write) == 0);
+  REQUIRE(fd_is_closed(raw_fd));
+  REQUIRE(::close(pipe.write_end) == 0);
 }
 
 TEST_CASE("Fd release returns fd and invalidates wrapper without closing fd") {
   const auto pipe = make_pipe();
   
-  Fd fd{pipe.read};
+  Fd fd{pipe.read_end};
   
   const int released_fd = fd.release();
 
-  REQUIRE(released_fd == pipe.read);
+  REQUIRE(released_fd == pipe.read_end);
   REQUIRE_FALSE(fd.valid());
   REQUIRE(fd.get() == -1);
   REQUIRE(fd_is_open(released_fd));
 
   REQUIRE(::close(released_fd) == 0);
-  REQUIRE(::close(pipe.write) == 0);
+  REQUIRE(::close(pipe.write_end) == 0);
 }
 
 TEST_CASE("Fd move constructor transfers ownership") {

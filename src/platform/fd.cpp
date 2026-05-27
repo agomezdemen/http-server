@@ -13,7 +13,7 @@ Fd::Fd(Fd &&other) noexcept : fd_{other.fd_} {
 
 auto Fd::operator=(Fd &&other) noexcept -> Fd& {
   if(this != &other){
-    if(fd != -1)
+    if(fd_ != -1)
       ::close(fd_);
     fd_ = other.fd_;
     other.fd_ = -1;

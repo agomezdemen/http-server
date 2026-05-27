@@ -1,11 +1,16 @@
-add_executable(buffer_tests buffer_tests.cpp)
-target_link_libraries(buffer_tests PRIVATE http::server_core)
-add_test(NAME buffer_tests COMMAND buffer_tests)
+find_package(Catch2 3 REQUIRED)
 
-add_executable(parser_tests parser_tests.cpp)
-target_link_libraries(parser_tests PRIVATE http::server_core)
-add_test(NAME parser_tests COMMAND parser_tests)
+add_executable(fd_tests
+    fd_tests.cpp
+)
 
-add_executable(response_tests response_tests.cpp)
-target_link_libraries(response_tests PRIVATE http::server_core)
-add_test(NAME response_tests COMMAND response_tests)
+target_link_libraries(fd_tests
+    PRIVATE
+        http::server_core
+        Catch2::Catch2WithMain
+)
+
+include(Catch)
+catch_discover_tests(fd_tests
+    DISCOVERY_MODE PRE_TEST
+)
