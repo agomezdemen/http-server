@@ -1,7 +1,7 @@
 #include "../../include/platform/fd.h"
 #include <unistd.h>
 
-Fd::Fd() : fd_{-1} {}
+Fd::Fd() noexcept : fd_{-1} {}
 
 Fd::Fd(int input_fd) noexcept : fd_{input_fd} {}
 

@@ -17,6 +17,7 @@ include(cmake/Sanitizers.cmake)
 
 add_library(http_server_core
     src/platform/fd.cpp
+    src/net/endpoint.cpp
     src/net/socket.cpp
     src/net/listener.cpp
     src/net/epoll.cpp
