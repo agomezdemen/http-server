@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <utility>
 
+// Endpoint is intentionally small: it only stores the user-facing address data.
 TEST_CASE("Endpoint constructs with host and port") {
   Endpoint ep{"127.0.0.1", 8080};
 

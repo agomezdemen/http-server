@@ -2,6 +2,7 @@
 #include <string>
 #include <utility>
 
+// Move the host string in so callers can pass either a literal or an owned string.
 Endpoint::Endpoint(std::string host, std::uint16_t port)
   : host_{std::move(host)}, port_{port} {}
 
@@ -14,5 +15,6 @@ auto Endpoint::port() const noexcept -> uint16_t {
 }
 
 auto Endpoint::to_string() const -> std::string {
+  // Used for logs and diagnostics; socket code still reads host and port separately.
   return host_ + ":" + std::to_string(port_);
 }

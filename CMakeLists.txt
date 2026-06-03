@@ -12,14 +12,16 @@ option(HTTP_ENABLE_WERROR "Treat warnings as errors" OFF)
 option(HTTP_ENABLE_SANITIZERS "Enable sanitizers" OFF)
 option(HTTP_ENABLE_LTO "Enable link-time optimization" OFF)
 
+# Keep warning and sanitizer setup in small helper files so targets stay readable.
 include(cmake/CompilerWarnings.cmake)
 include(cmake/Sanitizers.cmake)
 
+# Core server code lives in a library so the app, tests, and future benchmarks
+# can all link the same implementation.
 add_library(http_server_core
     src/platform/fd.cpp
     src/net/endpoint.cpp
-    src/net/socket.cpp
-    src/net/listener.cpp
+    src/net/tcp_listener.cpp
     src/net/epoll.cpp
 
     src/io/buffer.cpp
@@ -50,6 +52,7 @@ http_server_set_project_warnings(http_server_core)
 http_server_enable_sanitizers(http_server_core)
 
 if(HTTP_ENABLE_LTO)
+    # LTO support depends on the compiler and linker, so check before enabling it.
     include(CheckIPOSupported)
     check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
 
@@ -74,6 +77,7 @@ if(HTTP_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
+# Benchmarks are kept out of normal builds until the benchmark targets exist.
 if(HTTP_BUILD_BENCHMARKS)
     add_subdirectory(benchmarks)
 endif()

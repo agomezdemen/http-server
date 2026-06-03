@@ -1,5 +1,6 @@
 function(http_server_set_project_warnings target_name)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        # These warnings catch common C++ mistakes without needing compiler-specific code.
         target_compile_options(${target_name}
             PRIVATE
                 -Wall
@@ -17,6 +18,7 @@ function(http_server_set_project_warnings target_name)
         )
 
         if(HTTP_ENABLE_WERROR)
+            # Presets decide whether warnings should fail the build.
             target_compile_options(${target_name} PRIVATE -Werror)
         endif()
     endif()

@@ -13,6 +13,7 @@ namespace {
     int write_end;
   };
 
+  // Pipes give the tests real file descriptors without touching the filesystem.
   Pipe make_pipe() {
     int fds[2] {};
 
@@ -28,6 +29,7 @@ namespace {
     errno = 0;
     const int result = ::fcntl(fd, F_GETFD);
 
+    // EBADF is the expected kernel response for a descriptor that is no longer open.
     return result == -1 && errno == EBADF;
   }
 
@@ -56,6 +58,7 @@ TEST_CASE("Fd constructed from raw fd owns the fd") {
     REQUIRE(fd_is_open(pipe.read_end));
   }
 
+  // The wrapper went out of scope, so the read side should be closed now.
   REQUIRE(fd_is_closed(pipe.read_end));
 
   REQUIRE(::close(pipe.write_end) == 0);
@@ -88,6 +91,7 @@ TEST_CASE("Fd release returns fd and invalidates wrapper without closing fd") {
   REQUIRE(fd.get() == -1);
   REQUIRE(fd_is_open(released_fd));
 
+  // After release, the caller is responsible for closing the raw descriptor.
   REQUIRE(::close(released_fd) == 0);
   REQUIRE(::close(pipe.write_end) == 0);
 }
@@ -146,6 +150,7 @@ TEST_CASE("Fd move assignment closes destination's old fd") {
     REQUIRE(destination.valid());
     REQUIRE(destination.get() == new_fd);
 
+    // Move assignment must not leak the descriptor destination already owned.
     REQUIRE(fd_is_closed(old_fd));
     REQUIRE(fd_is_open(new_fd));
 

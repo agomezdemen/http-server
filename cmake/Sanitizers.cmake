@@ -4,6 +4,7 @@ function(http_server_enable_sanitizers target_name)
     endif()
 
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        # AddressSanitizer and UBSan catch memory errors and undefined behavior in debug builds.
         target_compile_options(${target_name}
             PUBLIC
                 -fsanitize=address,undefined

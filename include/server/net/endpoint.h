@@ -4,6 +4,8 @@
 #include <string>
 #include <cstdint>
 
+// Stores the address the server should bind or connect to.
+// Host is kept as text so parsing can happen at the socket boundary.
 class Endpoint {
 private:
   std::string host_;

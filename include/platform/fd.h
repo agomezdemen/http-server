@@ -1,26 +1,29 @@
-/*
-This is the RAII wrapper for file descriptors.
-Both the copy constructor and copy assignment are disabled for safety. 
-*/
-
 #ifndef FD_H
 #define FD_H
 
+// Owns one POSIX file descriptor and closes it when the wrapper goes away.
+// The handle is movable, but not copyable, so ownership stays clear.
 class Fd {
 private:
   int fd_;
 
 public:
-  Fd() noexcept;                                // empty constructor
-  explicit Fd(int) noexcept;                   // value constructor
-  Fd(Fd &&) noexcept;                 // constructor
-  Fd(const Fd &) = delete;            // deleting copy constructor
-  auto operator=(const Fd &) -> Fd& = delete; // delting copy assignment
-  auto operator=(Fd &&) noexcept -> Fd&;      // move assignment
-  ~Fd() noexcept;                               // destructor
-  auto valid() const noexcept -> bool; // checks validity of the Fd object
-  auto get() const noexcept -> int; // get sthe current fd handle
-  auto release() noexcept -> int; // releases the resource
+  Fd() noexcept;
+  explicit Fd(int fd) noexcept;
+
+  Fd(Fd &&other) noexcept;
+  Fd(const Fd &) = delete;
+
+  auto operator=(const Fd &) -> Fd& = delete;
+  auto operator=(Fd &&other) noexcept -> Fd&;
+
+  ~Fd() noexcept;
+
+  auto valid() const noexcept -> bool;
+  auto get() const noexcept -> int;
+
+  // Gives the raw descriptor back to the caller without closing it.
+  auto release() noexcept -> int;
 };
 
 #endif
