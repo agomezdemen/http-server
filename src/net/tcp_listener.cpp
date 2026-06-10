@@ -1,4 +1,5 @@
 #include "../../include/server/net/tcp_listener.h"
+#include ""
 #include <arpa/inet.h>
 #include <cerrno>
 #include <netinet/in.h>
@@ -64,16 +65,35 @@ TcpListener::TcpListener(Endpoint ep, int backlog)
   }
 }
 
-auto TcpListener::accept() -> Fd {
-  const int client_fd{::accept(sfd_.get(), nullptr, nullptr)};
+auto TcpListener::accept() -> TcpConnection {
+  sockaddr_in client_addr{};
+  socklen_t client_len{sizeof(client_addr)};
 
-  if(client_fd == -1) {
-    const int err{errno};
+  const auto client_fd{
+      ::accept(sfd_.get(), reinterpret_cast<sockaddr*>(&client_addr), &client_len)};
+
+  if (client_fd == -1) {
+    const auto err{errno};
     throw std::system_error{err, std::generic_category(), "accept failed"};
   }
 
-  return Fd{client_fd};
+  char ip_buffer[INET_ADDRSTRLEN]{};
+
+  if (::inet_ntop(AF_INET, &client_addr.sin_addr, ip_buffer, sizeof(ip_buffer)) ==
+      nullptr) {
+    const auto err{errno};
+    ::close(client_fd);
+    throw std::system_error{err, std::generic_category(), "inet_ntop failed"};
+  }
+
+  Endpoint peer{
+      std::string{ip_buffer},
+      ntohs(client_addr.sin_port)
+  };
+
+  return TcpConnection{Fd{client_fd}, std::move(peer)};
 }
+
 
 auto TcpListener::fd() const noexcept -> int {
   return sfd_.get();

@@ -2,6 +2,7 @@
 #define TCP_LISTENER
 #include "../../platform/fd.h"
 #include "endpoint.h"
+#include "tcp_connection.h"
 
 // Owns a listening TCP socket for one endpoint.
 // Accepted clients are returned as Fd objects so ownership stays explicit.
@@ -18,7 +19,7 @@ public:
   TcpListener(TcpListener&&) noexcept = default;
   auto operator=(TcpListener&&) noexcept -> TcpListener& = default;
 
-  auto accept() -> Fd;
+  auto accept() -> TcpConnection;
 
   auto fd() const noexcept -> int;
   auto endpoint() const noexcept -> const Endpoint&;
