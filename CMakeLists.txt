@@ -22,6 +22,7 @@ add_library(http_server_core
     src/platform/fd.cpp
     src/net/endpoint.cpp
     src/net/tcp_listener.cpp
+    src/net/tcp_connection.cpp
     src/net/epoll.cpp
 
     src/io/buffer.cpp

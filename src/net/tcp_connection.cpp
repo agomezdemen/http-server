@@ -1,5 +1,8 @@
 #include "../../include/server/net/tcp_connection.h"
 
+#include <cerrno>
+#include <sys/socket.h>
+#include <system_error>
 
 TcpConnection::TcpConnection(Fd cfd, Endpoint peer) : cfd_{std::move(cfd)}, peer_{std::move(peer)} {}
 

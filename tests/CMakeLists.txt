@@ -16,6 +16,7 @@ endfunction()
 http_server_add_catch_test(fd_tests fd_tests.cpp)
 http_server_add_catch_test(endpoint_tests endpoint_tests.cpp)
 http_server_add_catch_test(tcp_listener_tests tcp_listener_tests.cpp)
+http_server_add_catch_test(tcp_connection_tests tcp_connection_tests.cpp)
 
 include(Catch)
 
@@ -27,5 +28,8 @@ catch_discover_tests(endpoint_tests
     DISCOVERY_MODE PRE_TEST
 )
 catch_discover_tests(tcp_listener_tests
+    DISCOVERY_MODE PRE_TEST
+)
+catch_discover_tests(tcp_connection_tests
     DISCOVERY_MODE PRE_TEST
 )
