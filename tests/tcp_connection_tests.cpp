@@ -86,3 +86,29 @@ TEST_CASE("TcpConnection write throws when fd is invalid") {
 
   REQUIRE_THROWS_AS(conn.write("hello"), std::system_error);
 }
+
+TEST_CASE("TcpConnection write_all writes complete message") {
+  auto [client_fd, server_fd] = make_socket_pair_somehow();
+
+  TcpConnection conn{std::move(server_fd), Endpoint{"127.0.0.1", 0}};
+
+  constexpr std::string_view message{"Hello from write_all"};
+
+  const auto bytes_written{conn.write_all(message)};
+
+  REQUIRE(bytes_written == message.size());
+
+  std::array<char, 64> buffer{};
+  const auto bytes_read{::read(client_fd.get(), buffer.data(), buffer.size())};
+
+  REQUIRE(bytes_read == static_cast<ssize_t>(message.size()));
+  REQUIRE(std::string_view{buffer.data(), message.size()} == message);
+}
+
+TEST_CASE("TcpConnection write_all with empty data writes zero bytes") {
+  auto [client_fd, server_fd] = make_socket_pair_somehow();
+
+  TcpConnection conn{std::move(server_fd), Endpoint{"127.0.0.1", 0}};
+
+  REQUIRE(conn.write_all("") == 0);
+}
