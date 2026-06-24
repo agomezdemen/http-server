@@ -32,7 +32,7 @@ auto main() -> int {
         "Hello world!\n"
       };
 
-      const auto bytes_written{conn.write(response)};
+      const auto bytes_written{conn.write_all(response)};
 
       std::cout << "response size: " << response.size() << '\n';
       std::cout << "bytes written: " << bytes_written << '\n';
