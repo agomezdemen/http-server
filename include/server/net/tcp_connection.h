@@ -10,7 +10,7 @@
 class TcpConnection {
 private:
   Fd cfd_; // connection fd
-  Endpoint peer_; // connexted peer
+  Endpoint peer_; // connected peer
 
 public:
   TcpConnection(Fd cfd, Endpoint peer);

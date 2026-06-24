@@ -1,11 +1,17 @@
 #include "../include/server/net/tcp_listener.h"
+#include "../include/server/net/tcp_connection.h"
 #include "../include/server/net/endpoint.h"
 #include "../include/platform/fd.h"
+
 #include <arpa/inet.h>
+#include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <cerrno>
 #include <netinet/in.h>
+#include <span>
+#include <stdexcept>
 #include <string_view>
+#include <system_error>
 #include <sys/socket.h>
 #include <type_traits>
 #include <unistd.h>
@@ -13,7 +19,7 @@
 
 namespace {
 
-sockaddr_in loopback_addr(unsigned short port) {
+auto loopback_addr(unsigned short port) -> sockaddr_in {
   sockaddr_in addr{};
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
@@ -23,16 +29,16 @@ sockaddr_in loopback_addr(unsigned short port) {
   return addr;
 }
 
-Fd connected_client(const TcpListener& listener) {
+auto connected_client(const TcpListener& listener) -> Fd {
   Fd client_fd{::socket(AF_INET, SOCK_STREAM, 0)};
   REQUIRE(client_fd.valid());
 
   const sockaddr_in addr{loopback_addr(listener.bound_port())};
 
   REQUIRE(::connect(
-        client_fd.get(),
-        reinterpret_cast<const sockaddr*>(&addr),
-        static_cast<socklen_t>(sizeof(addr))) != -1);
+              client_fd.get(),
+              reinterpret_cast<const sockaddr*>(&addr),
+              static_cast<socklen_t>(sizeof(addr))) != -1);
 
   return client_fd;
 }
@@ -56,7 +62,6 @@ TEST_CASE("Invalid backlog throws") {
   REQUIRE_THROWS_AS(
       ([&] { TcpListener listener{ep, -1}; }()),
       std::invalid_argument);
-
 }
 
 TEST_CASE("Invalid IPv4 address throws") {
@@ -68,15 +73,14 @@ TEST_CASE("Invalid IPv4 address throws") {
   REQUIRE_THROWS_AS(
       [&] { TcpListener{ep_1}; }(),
       std::runtime_error);
-  
+
   REQUIRE_THROWS_AS(
       [&] { TcpListener{ep_2}; }(),
       std::runtime_error);
-  
+
   REQUIRE_THROWS_AS(
       [&] { TcpListener{ep_3}; }(),
       std::runtime_error);
-
 }
 
 TEST_CASE("Binding to the same port twice fails") {
@@ -89,47 +93,53 @@ TEST_CASE("Binding to the same port twice fails") {
   REQUIRE_THROWS_AS(
       ([&] { TcpListener listener_2{bound_ep}; }()),
       std::system_error);
-
 }
 
-TEST_CASE("Accept returns a valid client") {
+TEST_CASE("Accept returns a usable TcpConnection") {
   Endpoint ep{"127.0.0.1", 0};
   TcpListener listener{ep};
 
   Fd client_fd{connected_client(listener)};
 
-  Fd accepted_fd{listener.accept()};
+  TcpConnection accepted_conn{listener.accept()};
 
-  REQUIRE(accepted_fd.valid());
+  const auto bytes_written{accepted_conn.write("x")};
+  REQUIRE(bytes_written == 1);
+
+  std::array<char, 2> response{};
+  const auto bytes_read{::read(client_fd.get(), response.data(), 1)};
+
+  REQUIRE(bytes_read == 1);
+  REQUIRE(std::string_view{response.data(), 1} == "x");
 }
 
-
-TEST_CASE("Accepted socket can communicate") {
+TEST_CASE("Accepted TcpConnection can communicate") {
   Endpoint ep{"127.0.0.1", 0};
   TcpListener listener{ep};
 
   Fd client_fd{connected_client(listener)};
 
-  Fd accepted_fd{listener.accept()};
+  TcpConnection accepted_conn{listener.accept()};
 
-  REQUIRE(accepted_fd.valid());
+  // Client -> accepted connection
+  REQUIRE(::write(client_fd.get(), "hello", 5) == 5);
 
-  // Check both directions so the accepted descriptor is proven to be a live socket.
-  ::write(client_fd.get(), "hello", 5);
+  std::array<char, 6> buffer{};
+  const auto bytes_read{
+      accepted_conn.read(std::span<char>{buffer.data(), 5})};
 
-  char buffer[6]{};
-  auto bytes_read = ::read(accepted_fd.get(), buffer, 5);
-  
   REQUIRE(bytes_read == 5);
-  REQUIRE(std::string_view{buffer, 5} == "hello");
+  REQUIRE(std::string_view{buffer.data(), 5} == "hello");
 
-  ::write(accepted_fd.get(), "world", 5);
+  // Accepted connection -> client
+  const auto bytes_written{accepted_conn.write("world")};
+  REQUIRE(bytes_written == 5);
 
-  char response[6]{};
-  auto response_read = ::read(client_fd.get(), response, 5);
+  std::array<char, 6> response{};
+  const auto response_read{::read(client_fd.get(), response.data(), 5)};
 
   REQUIRE(response_read == 5);
-  REQUIRE(std::string_view{response, 5} == "world");
+  REQUIRE(std::string_view{response.data(), 5} == "world");
 }
 
 TEST_CASE("Move behavior works indirectly") {
