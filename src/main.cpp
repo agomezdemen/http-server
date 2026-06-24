@@ -29,10 +29,15 @@ auto main() -> int {
         "Content-Length: 12\r\n"
         "Connection: close\r\n"
         "\r\n"
-        "Hello world!"
+        "Hello world!\n"
       };
-      conn.write(response);
+
+      const auto bytes_written{conn.write(response)};
+
+      std::cout << "response size: " << response.size() << '\n';
+      std::cout << "bytes written: " << bytes_written << '\n';
     }
+
   } catch (const std::exception& e) {
     std::cerr << "error: " << e.what() << '\n';
     return 1;
