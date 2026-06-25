@@ -1,8 +1,9 @@
-#ifndef HTTP_RESPONSE
-#define HTTP_RESPONSE
+#ifndef HTTP_RESPONSE_H
+#define HTTP_RESPONSE_H
 
 #include <string>
 #include <string_view>
+#include <vector>
 
 enum class HttpStatus : int {
   ok = 200,
@@ -12,9 +13,15 @@ enum class HttpStatus : int {
   internal_server_error = 500
 };
 
+struct Header {
+  std::string name;
+  std::string value;
+};
+
 class HttpResponse {
 private:
   HttpStatus status_;
+  std::vector<Header> headers_;
   std::string body_;
 
   static constexpr auto reason_phrase(HttpStatus status) noexcept -> std::string_view {
@@ -35,6 +42,11 @@ private:
   }
 
 public:
+  explicit HttpResponse(HttpStatus status);
+    
+  auto set_header(std::string name, std::string value) -> void;
+  auto set_body(std::string body) -> void;
+  [[nodiscard]] auto to_string() const -> std::string;
 };
 
 #endif

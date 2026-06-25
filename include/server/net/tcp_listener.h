@@ -1,5 +1,5 @@
-#ifndef TCP_LISTENER
-#define TCP_LISTENER
+#ifndef TCP_LISTENER_H
+#define TCP_LISTENER_H
 #include "../../platform/fd.h"
 #include "endpoint.h"
 #include "tcp_connection.h"
