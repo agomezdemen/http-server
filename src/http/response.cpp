@@ -13,7 +13,7 @@ auto HttpResponse::set_header(std::string name, std::string value) -> void {
 
   headers_.push_back(Header{
       .name = std::move(name), 
-      .value = std::move(name)});
+      .value = std::move(value)});
 }
 
 auto HttpResponse::set_body(std::string body) -> void {
@@ -21,7 +21,7 @@ auto HttpResponse::set_body(std::string body) -> void {
 }
 
 auto HttpResponse::to_string() const -> std::string {
-  auto response{""s};
+  auto response{std::string{}};
 
   response += "HTTP/1.1 ";
   response += std::to_string(static_cast<int>(status_));

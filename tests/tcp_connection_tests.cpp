@@ -88,7 +88,7 @@ TEST_CASE("TcpConnection write throws when fd is invalid") {
 }
 
 TEST_CASE("TcpConnection write_all writes complete message") {
-  auto [client_fd, server_fd] = make_socket_pair_somehow();
+  auto [client_fd, server_fd] = make_socket_pair();
 
   TcpConnection conn{std::move(server_fd), Endpoint{"127.0.0.1", 0}};
 
@@ -106,7 +106,7 @@ TEST_CASE("TcpConnection write_all writes complete message") {
 }
 
 TEST_CASE("TcpConnection write_all with empty data writes zero bytes") {
-  auto [client_fd, server_fd] = make_socket_pair_somehow();
+  auto [client_fd, server_fd] = make_socket_pair();
 
   TcpConnection conn{std::move(server_fd), Endpoint{"127.0.0.1", 0}};
 

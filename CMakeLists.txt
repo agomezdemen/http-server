@@ -38,7 +38,7 @@ add_library(http_server_core
 
 add_library(http::server_core ALIAS http_server_core)
 
-target_compile_features(http_server_core PUBLIC cxx_std_20)
+target_compile_features(http_server_core PUBLIC cxx_std_23)
 
 set_target_properties(http_server_core PROPERTIES
     CXX_EXTENSIONS OFF
