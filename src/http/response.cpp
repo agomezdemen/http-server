@@ -1,7 +1,9 @@
 #include "../../include/server/http/response.h"
 #include <string>
 
-HttpResponse::HttpResponse(HttpStatus status) : status_{status}, headers_{}, body_{} {}
+namespace http = server::http;
+
+HttpResponse::HttpResponse(http::Status status, http::Version version) : version_{version}, status_{status}, headers_{}, body_{} {}
   
 auto HttpResponse::set_header(std::string name, std::string value) -> void {
   for(auto& header : headers_) {
@@ -11,7 +13,7 @@ auto HttpResponse::set_header(std::string name, std::string value) -> void {
     }
   }
 
-  headers_.push_back(Header{
+  headers_.push_back(http::Header{
       .name = std::move(name), 
       .value = std::move(value)});
 }
@@ -23,10 +25,11 @@ auto HttpResponse::set_body(std::string body) -> void {
 auto HttpResponse::to_string() const -> std::string {
   auto response{std::string{}};
 
-  response += "HTTP/1.1 ";
+  response += http::to_string(version_);
+  response += ' ';
   response += std::to_string(static_cast<int>(status_));
   response += ' ';
-  response.append(reason_phrase(status_));
+  response.append(http::to_string(status_));
   response += "\r\n";
 
   for (const auto& header : headers_) {
