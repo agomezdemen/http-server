@@ -4,6 +4,13 @@
 HttpResponse::HttpResponse(HttpStatus status) : status_{status}, headers_{}, body_{} {}
   
 auto HttpResponse::set_header(std::string name, std::string value) -> void {
+  for(auto& header : headers_) {
+    if(header.name == name) {
+      header.value = value;
+      return;
+    }
+  }
+
   headers_.push_back(Header{
       .name = std::move(name), 
       .value = std::move(name)});
