@@ -3,10 +3,11 @@
 
 #include <string>
 #include <string_view>
+#include <cstdint>
 
 namespace server::http {
   // types
-  enum class Method {
+  enum class Method : std::uint8_t {
     get,
     head,
     options,
@@ -19,7 +20,7 @@ namespace server::http {
     unknown
   };
 
-  enum class Status : int {
+  enum class Status : std::uint16_t {
     ok = 200,
     bad_request = 400,
     not_found = 404,
@@ -32,7 +33,7 @@ namespace server::http {
     std::string value;
   };
 
-  enum class Version {
+  enum class Version : std::uint8_t {
     http_1_1,
     unknown
   };

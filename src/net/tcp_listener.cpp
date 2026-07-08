@@ -10,7 +10,7 @@
 #include <utility>
 
 TcpListener::TcpListener(Endpoint ep, int backlog)
-    : sfd_{::socket(AF_INET, SOCK_STREAM, 0)}, ep_{std::move(ep)} {
+    : ep_{std::move(ep)}, sfd_{::socket(AF_INET, SOCK_STREAM, 0)} {
   
   if(backlog <= 0) {
     throw std::invalid_argument{"backlog must be positive"};

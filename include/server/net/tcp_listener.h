@@ -8,8 +8,8 @@
 // Accepted clients are returned as Fd objects so ownership stays explicit.
 class TcpListener {
 private:
-  Fd sfd_;
   Endpoint ep_;
+  Fd sfd_;
 
 public:
   explicit TcpListener(Endpoint ep, int backlog = 128);

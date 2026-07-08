@@ -1,11 +1,11 @@
 #include "../../include/server/http/response.h"
 #include <string>
 
-namespace http = server::http;
+namespace server::http {
 
-HttpResponse::HttpResponse(http::Status status, http::Version version) : version_{version}, status_{status}, headers_{}, body_{} {}
+Response::Response(Status status, Version version) : headers_{}, body_{}, status_{status}, version_{version} {}
   
-auto HttpResponse::set_header(std::string name, std::string value) -> void {
+auto Response::set_header(std::string name, std::string value) -> void {
   for(auto& header : headers_) {
     if(header.name == name) {
       header.value = value;
@@ -13,23 +13,23 @@ auto HttpResponse::set_header(std::string name, std::string value) -> void {
     }
   }
 
-  headers_.push_back(http::Header{
+  headers_.push_back(Header{
       .name = std::move(name), 
       .value = std::move(value)});
 }
 
-auto HttpResponse::set_body(std::string body) -> void {
+auto Response::set_body(std::string body) -> void {
   body_ = std::move(body);
 }
 
-auto HttpResponse::to_string() const -> std::string {
+auto Response::to_string() const -> std::string {
   auto response{std::string{}};
 
-  response += http::to_string(version_);
+  response += server::http::to_string(version_);
   response += ' ';
   response += std::to_string(static_cast<int>(status_));
   response += ' ';
-  response.append(http::to_string(status_));
+  response.append(server::http::to_string(status_));
   response += "\r\n";
 
   for (const auto& header : headers_) {
@@ -47,4 +47,6 @@ auto HttpResponse::to_string() const -> std::string {
   response += body_;
 
   return response; 
+}
+
 }

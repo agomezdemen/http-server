@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <system_error>
 
-TcpConnection::TcpConnection(Fd cfd, Endpoint peer) : cfd_{std::move(cfd)}, peer_{std::move(peer)} {}
+TcpConnection::TcpConnection(Fd cfd, Endpoint peer) : peer_{std::move(peer)}, cfd_{std::move(cfd)} {}
 
 auto TcpConnection::read(std::span<char> buffer) -> std::size_t {
   auto n{::recv(cfd_.get(), buffer.data(), buffer.size(), 0)};

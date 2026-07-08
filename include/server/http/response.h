@@ -6,21 +6,21 @@
 #include <vector>
 #include "http_types.h"
 
-namespace http = server::http;
-
-class HttpResponse {
-private:
-  http::Version version_;
-  http::Status status_;
-  std::vector<http::Header> headers_;
-  std::string body_;
-
-public:
-  explicit HttpResponse(http::Status status, http::Version version = http::Version::http_1_1);
+namespace server::http {
+  class Response {
+  private:
+    std::vector<Header> headers_;
+    std::string body_;
+    Status status_;
+    Version version_;
     
-  auto set_header(std::string name, std::string value) -> void;
-  auto set_body(std::string body) -> void;
-  [[nodiscard]] auto to_string() const -> std::string;
-};
+  public:
+    explicit Response(Status status, Version version = Version::http_1_1);
+      
+    auto set_header(std::string name, std::string value) -> void;
+    auto set_body(std::string body) -> void;
+    [[nodiscard]] auto to_string() const -> std::string;
+  };
+}
 
 #endif
