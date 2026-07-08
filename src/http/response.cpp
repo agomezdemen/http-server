@@ -1,30 +1,30 @@
 #include "../../include/server/http/response.h"
+
 #include <string>
 
 namespace server::http {
 
-Response::Response(Status status, Version version) : headers_{}, body_{}, status_{status}, version_{version} {}
-  
+Response::Response(Status status, Version version)
+    : headers_{}, body_{}, status_{status}, version_{version} {}
+
 auto Response::set_header(std::string name, std::string value) -> void {
-  for(auto& header : headers_) {
-    if(header.name == name) {
+  // Header names are treated as exact matches for now.
+  for (auto& header : headers_) {
+    if (header.name == name) {
       header.value = value;
       return;
     }
   }
 
-  headers_.push_back(Header{
-      .name = std::move(name), 
-      .value = std::move(value)});
+  headers_.push_back(Header{.name = std::move(name), .value = std::move(value)});
 }
 
-auto Response::set_body(std::string body) -> void {
-  body_ = std::move(body);
-}
+auto Response::set_body(std::string body) -> void { body_ = std::move(body); }
 
 auto Response::to_string() const -> std::string {
   auto response{std::string{}};
 
+  // Serialize the start line first, followed by user headers and body metadata.
   response += server::http::to_string(version_);
   response += ' ';
   response += std::to_string(static_cast<int>(status_));
@@ -46,7 +46,7 @@ auto Response::to_string() const -> std::string {
   response += "\r\n";
   response += body_;
 
-  return response; 
+  return response;
 }
 
-}
+}  // namespace server::http

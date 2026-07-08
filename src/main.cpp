@@ -1,19 +1,20 @@
-#include "../include/server/net/tcp_listener.h"
-#include "../include/server/net/tcp_connection.h"
-#include "../include/server/net/endpoint.h"
-
 #include <array>
 #include <iostream>
 #include <string_view>
 
+#include "../include/server/net/endpoint.h"
+#include "../include/server/net/tcp_connection.h"
+#include "../include/server/net/tcp_listener.h"
+
 auto main() -> int {
   try {
+    // The prototype server accepts one client at a time on loopback.
     Endpoint ep{"127.0.0.1", 8080};
     TcpListener listener{ep};
 
     std::cout << "Listening on " << ep.to_string() << '\n';
 
-    while(true) {
+    while (true) {
       auto conn{listener.accept()};
 
       std::array<char, 4096> buffer{};
@@ -23,14 +24,14 @@ auto main() -> int {
 
       std::cout << "Request:\n" << request << '\n';
 
-      constexpr std::string_view response {
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/plain\r\n"
-        "Content-Length: 12\r\n"
-        "Connection: close\r\n"
-        "\r\n"
-        "Hello world!\n"
-      };
+      // Response serialization will move into the HTTP layer as the server grows.
+      constexpr std::string_view response{
+          "HTTP/1.1 200 OK\r\n"
+          "Content-Type: text/plain\r\n"
+          "Content-Length: 12\r\n"
+          "Connection: close\r\n"
+          "\r\n"
+          "Hello world!\n"};
 
       const auto bytes_written{conn.write_all(response)};
 
@@ -45,4 +46,3 @@ auto main() -> int {
 
   return 0;
 }
-

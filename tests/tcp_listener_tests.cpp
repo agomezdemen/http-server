@@ -1,24 +1,26 @@
-#include "../include/server/net/tcp_listener.h"
-#include "../include/server/net/tcp_connection.h"
-#include "../include/server/net/endpoint.h"
-#include "../include/platform/fd.h"
-
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
 #include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <cerrno>
-#include <netinet/in.h>
 #include <span>
 #include <stdexcept>
 #include <string_view>
 #include <system_error>
-#include <sys/socket.h>
 #include <type_traits>
-#include <unistd.h>
 #include <utility>
+
+#include "../include/platform/fd.h"
+#include "../include/server/net/endpoint.h"
+#include "../include/server/net/tcp_connection.h"
+#include "../include/server/net/tcp_listener.h"
 
 namespace {
 
+// Build a loopback sockaddr for client sockets that connect to test listeners.
 auto loopback_addr(unsigned short port) -> sockaddr_in {
   sockaddr_in addr{};
   addr.sin_family = AF_INET;
@@ -30,20 +32,19 @@ auto loopback_addr(unsigned short port) -> sockaddr_in {
 }
 
 auto connected_client(const TcpListener& listener) -> Fd {
+  // Connect a real client socket so listener.accept() can return immediately.
   Fd client_fd{::socket(AF_INET, SOCK_STREAM, 0)};
   REQUIRE(client_fd.valid());
 
   const sockaddr_in addr{loopback_addr(listener.bound_port())};
 
-  REQUIRE(::connect(
-              client_fd.get(),
-              reinterpret_cast<const sockaddr*>(&addr),
-              static_cast<socklen_t>(sizeof(addr))) != -1);
+  REQUIRE(::connect(client_fd.get(), reinterpret_cast<const sockaddr*>(&addr),
+                    static_cast<socklen_t>(sizeof(addr))) != -1);
 
   return client_fd;
 }
 
-} // namespace
+}  // namespace
 
 TEST_CASE("Constructor succeeds with valid localhost endpoint") {
   Endpoint ep{"127.0.0.1", 0};
@@ -55,13 +56,9 @@ TEST_CASE("Constructor succeeds with valid localhost endpoint") {
 TEST_CASE("Invalid backlog throws") {
   Endpoint ep{"127.0.0.1", 0};
 
-  REQUIRE_THROWS_AS(
-      ([&] { TcpListener listener{ep, 0}; }()),
-      std::invalid_argument);
+  REQUIRE_THROWS_AS(([&] { TcpListener listener{ep, 0}; }()), std::invalid_argument);
 
-  REQUIRE_THROWS_AS(
-      ([&] { TcpListener listener{ep, -1}; }()),
-      std::invalid_argument);
+  REQUIRE_THROWS_AS(([&] { TcpListener listener{ep, -1}; }()), std::invalid_argument);
 }
 
 TEST_CASE("Invalid IPv4 address throws") {
@@ -70,17 +67,11 @@ TEST_CASE("Invalid IPv4 address throws") {
   Endpoint ep_3{"localhost", 0};
 
   // Host names are not resolved yet; the listener only accepts IPv4 literals.
-  REQUIRE_THROWS_AS(
-      [&] { TcpListener{ep_1}; }(),
-      std::runtime_error);
+  REQUIRE_THROWS_AS([&] { TcpListener{ep_1}; }(), std::runtime_error);
 
-  REQUIRE_THROWS_AS(
-      [&] { TcpListener{ep_2}; }(),
-      std::runtime_error);
+  REQUIRE_THROWS_AS([&] { TcpListener{ep_2}; }(), std::runtime_error);
 
-  REQUIRE_THROWS_AS(
-      [&] { TcpListener{ep_3}; }(),
-      std::runtime_error);
+  REQUIRE_THROWS_AS([&] { TcpListener{ep_3}; }(), std::runtime_error);
 }
 
 TEST_CASE("Binding to the same port twice fails") {
@@ -90,9 +81,7 @@ TEST_CASE("Binding to the same port twice fails") {
   // Use the real port chosen for listener_1, since port 0 means "pick one".
   Endpoint bound_ep{"127.0.0.1", listener_1.bound_port()};
 
-  REQUIRE_THROWS_AS(
-      ([&] { TcpListener listener_2{bound_ep}; }()),
-      std::system_error);
+  REQUIRE_THROWS_AS(([&] { TcpListener listener_2{bound_ep}; }()), std::system_error);
 }
 
 TEST_CASE("Accept returns a usable TcpConnection") {
@@ -125,8 +114,7 @@ TEST_CASE("Accepted TcpConnection can communicate") {
   REQUIRE(::write(client_fd.get(), "hello", 5) == 5);
 
   std::array<char, 6> buffer{};
-  const auto bytes_read{
-      accepted_conn.read(std::span<char>{buffer.data(), 5})};
+  const auto bytes_read{accepted_conn.read(std::span<char>{buffer.data(), 5})};
 
   REQUIRE(bytes_read == 5);
   REQUIRE(std::string_view{buffer.data(), 5} == "hello");

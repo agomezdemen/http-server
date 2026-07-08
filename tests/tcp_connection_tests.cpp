@@ -1,38 +1,36 @@
-#include "../include/server/net/tcp_connection.h"
-#include "../include/server/net/endpoint.h"
-#include "../include/platform/fd.h"
-
-#include <catch2/catch_test_macros.hpp>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #include <array>
+#include <catch2/catch_test_macros.hpp>
 #include <span>
 #include <string_view>
-#include <sys/socket.h>
 #include <system_error>
-#include <unistd.h>
 #include <utility>
+
+#include "../include/platform/fd.h"
+#include "../include/server/net/endpoint.h"
+#include "../include/server/net/tcp_connection.h"
 
 namespace {
 
+// Socket pairs let connection tests exercise real send/recv behavior locally.
 auto make_socket_pair() -> std::pair<Fd, Fd> {
   int sockets[2]{-1, -1};
 
-  if(::socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) == -1) {
-    throw std::system_error{
-      errno,
-      std::generic_category(),
-      "socketpair failed"
-    };
+  if (::socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) == -1) {
+    throw std::system_error{errno, std::generic_category(), "socketpair failed"};
   }
 
   return {Fd{sockets[0]}, Fd{sockets[1]}};
 }
 
 auto fake_peer() -> Endpoint {
+  // TcpConnection stores peer metadata even when the socket pair is local.
   return Endpoint{"127.0.0.1", 8080};
 }
 
-}
+}  // namespace
 
 TEST_CASE("TcpConnection can read bytes sent by peer") {
   auto [conn_fd, peer_fd] = make_socket_pair();
@@ -41,9 +39,7 @@ TEST_CASE("TcpConnection can read bytes sent by peer") {
 
   constexpr std::string_view msg{"hello"};
 
-  REQUIRE(
-      ::send(peer_fd.get(), msg.data(), 
-        msg.size(), 0) == static_cast<ssize_t>(msg.size()));
+  REQUIRE(::send(peer_fd.get(), msg.data(), msg.size(), 0) == static_cast<ssize_t>(msg.size()));
 
   std::array<char, 16> buffer{};
 
@@ -66,8 +62,7 @@ TEST_CASE("TcpConnection can write bytes to peer") {
 
   std::array<char, 64> buffer{};
 
-  const auto bytes_read{
-    ::recv(peer_fd.get(), buffer.data(), buffer.size(), 0)};
+  const auto bytes_read{::recv(peer_fd.get(), buffer.data(), buffer.size(), 0)};
 
   REQUIRE(bytes_read == static_cast<ssize_t>(msg.size()));
   REQUIRE(std::string_view{buffer.data(), static_cast<std::size_t>(bytes_read)} == msg);

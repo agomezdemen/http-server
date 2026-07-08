@@ -1,169 +1,115 @@
 # Modern C++ HTTP Server
 
-A high-performance HTTP server written in modern C++ using Linux networking primitives. The project is currently focused on building a reliable single-threaded event-driven server using nonblocking sockets and epoll. The long-term goal is to evolve the server into a more complete systems project with strong architecture, testing, benchmarking, and eventually multithreading.
+A small HTTP server project written in C++23 on top of Linux socket APIs. The
+current codebase is focused on building the low-level pieces first: file
+descriptor ownership, TCP endpoints, listeners, accepted connections, and HTTP
+response serialization.
+
+The executable currently accepts one connection at a time on `127.0.0.1:8080`,
+prints the received request bytes, and writes a fixed `Hello world!` response.
+The event-loop, parser, buffer, and higher-level server layers are still
+scaffolded for future work.
 
 ## Goals
 
-The first goal of this project is to build a clean single-threaded HTTP server from the ground up using modern C++ and low-level Linux APIs.
-
-Core goals:
-
-- Use RAII to safely manage system resources.
-- Use nonblocking sockets for network I/O.
-- Use epoll for readiness-based event handling.
-- Keep HTTP parsing separate from socket and event-loop logic.
-- Build a small but testable architecture.
-- Establish separate build configurations for prototyping, debugging, profiling, and release builds.
-
-## Architecture Overview
-
-The server is organized into several layers:
-
-Application layer:
-- Starts the server.
-- Handles top-level configuration.
-- Keeps main.cpp small.
-
-Server layer:
-- Owns the main server runtime.
-- Manages the event loop.
-- Tracks active client connections.
-
-Networking layer:
-- Wraps low-level Linux file descriptors.
-- Manages sockets, listeners, and epoll.
-- Keeps raw system calls isolated from higher-level server logic.
-
-I/O layer:
-- Provides buffer abstractions for reading from and writing to sockets.
-- Helps handle partial reads and partial writes.
-
-HTTP layer:
-- Represents HTTP requests and responses.
-- Parses raw request bytes into structured request objects.
-- Serializes response objects into bytes that can be written to the client.
+- Use RAII to make POSIX file descriptor ownership explicit.
+- Keep socket code isolated from HTTP request and response code.
+- Build each layer behind small, testable interfaces.
+- Use CMake presets for prototype, debug, profile, and release builds.
+- Grow toward an event-driven HTTP/1.1 server without hiding the Linux APIs.
 
 ## Project Layout
-
 
 ```text
 modern-http-server/
 ├── include/
+│   ├── platform/
 │   └── server/
-│       ├── net/
-│       ├── io/
 │       ├── http/
+│       ├── io/
+│       ├── net/
 │       └── server/
 ├── src/
-│   ├── main.cpp
-│   ├── net/
-│   ├── io/
 │   ├── http/
+│   ├── io/
+│   ├── net/
+│   ├── platform/
 │   └── server/
 ├── tests/
 ├── benchmarks/
-├── docs/
 ├── cmake/
+├── docs/
 ├── CMakeLists.txt
 └── CMakePresets.json
 ```
 
+## Implemented Pieces
 
-## Main Components
+- `Fd`: movable RAII wrapper for POSIX file descriptors.
+- `Endpoint`: stores host and port values used by listener and connection code.
+- `TcpListener`: creates, binds, listens, accepts, and reports the bound port.
+- `TcpConnection`: reads, writes, and writes complete buffers to a peer socket.
+- `server::http::Response`: serializes HTTP version, status, headers, content
+  length, and body.
+- `server::http` types: shared method, status, version, and header definitions.
 
-### File Descriptor Management
+## In Progress
 
-The networking layer uses an RAII file descriptor wrapper to ensure that file descriptors are closed automatically. This helps prevent resource leaks and makes ownership clear.
+- `server::http::Request` has its data model declared, but behavior is not
+  implemented yet.
+- HTTP parser, I/O buffer, epoll, server, event loop, and server connection
+  files are present as scaffolding.
+- `main.cpp` is still a simple blocking prototype, not the final event-loop
+  architecture.
+- Benchmarks are wired as an optional build area, but benchmark targets are not
+  implemented yet.
 
-### Listener
+## Build And Test
 
-The listener owns the server socket. It is responsible for binding to an endpoint, listening for incoming clients, and accepting new connections.
+Configure and build the prototype preset:
 
-### Epoll Wrapper
+```sh
+cmake --preset prototype
+cmake --build --preset prototype
+```
 
-The epoll wrapper isolates Linux epoll operations from the rest of the server. It handles registering, modifying, removing, and waiting on file descriptor events.
+Run the tests:
 
-### Event Loop
-
-The event loop is the core of the single-threaded server. It waits for readiness events and dispatches work to the appropriate part of the server.
-
-It handles:
-
-- new incoming connections
-- readable client sockets
-- writable client sockets
-- closed or failed connections
-
-### Connection
-
-A connection represents one active client. It owns the client socket, read buffer, write buffer, and HTTP parsing state.
-
-### HTTP Parser
-
-The parser is responsible for turning raw bytes into an HTTP request. It is designed to eventually support incremental parsing so that requests do not need to arrive in one complete read.
-
-### HTTP Response
-
-The response layer builds valid HTTP responses and serializes them into bytes that can be written back to the client.
-
-## Build Configurations
-
-This project uses CMake presets for different development modes.
+```sh
+ctest --preset prototype
+```
 
 Available build presets:
 
-- prototype: fast development build with relaxed warnings
-- debug: strict debug build with sanitizers
-- profile: optimized build with debug symbols for profiling
-- release: optimized release build
+- `prototype`: fast debug build with relaxed warnings.
+- `debug`: strict debug build with warnings-as-errors and sanitizers.
+- `profile`: optimized build with debug symbols.
+- `release`: optimized release build with LTO enabled when supported.
 
-Example usage:
+## Formatting
 
-cmake --preset prototype
-cmake --build --preset prototype
+The project uses `clang-format` with Google-derived C++ formatting settings.
+Format C++ sources and headers with:
 
-cmake --preset debug
-cmake --build --preset debug
-
-cmake --preset profile
-cmake --build --preset profile
-
-cmake --preset release
-cmake --build --preset release
+```sh
+clang-format -i $(find include src tests -name '*.h' -o -name '*.cpp')
+```
 
 ## Current Status
 
-The project is currently in the early MVP stage.
+The prototype build currently compiles with C++23 and the active CTest suite
+covers the implemented file descriptor, endpoint, listener, connection, and
+HTTP response behavior.
 
-Initial milestones:
-
-- Set up project structure
-- Set up CMake build presets
-- Implement RAII file descriptor wrapper
-- Implement listening socket
-- Implement epoll wrapper
-- Implement single-threaded event loop
-- Return a hardcoded HTTP response
-- Add basic HTTP request parsing
-- Add tests for parser and response serialization
-- Add benchmarks for request throughput
-
-Current repository status:
-
-- Buildable CMake skeleton
-- Public headers for each planned layer
-- Minimal placeholder implementations
-- CTest-based smoke tests for buffer, parser, and response types
+Some tests open local sockets. If they fail with `Operation not permitted` in a
+sandboxed environment, rerun them in an environment that allows loopback/socket
+operations.
 
 ## Long-Term Direction
 
-After the single-threaded server is reliable, future work may include:
-
-- persistent connections
-- more complete HTTP/1.1 support
-- configurable routing
-- static file serving
-- better error handling
-- benchmarking against existing servers
-- multithreaded event loop design
-- custom memory and buffer optimizations
+- Implement request parsing and request serialization support.
+- Add nonblocking sockets and epoll-backed readiness handling.
+- Move the prototype `main.cpp` flow into the server/event-loop layer.
+- Support persistent HTTP/1.1 connections and better error responses.
+- Add routing, static file serving, and benchmarking once the core runtime is
+  stable.

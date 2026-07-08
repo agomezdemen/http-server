@@ -1,11 +1,10 @@
-#include "../include/server/http/response.h"
-#include "../include/server/http/http_types.h"
-
 #include <catch2/catch_test_macros.hpp>
-
 #include <cstddef>
 #include <string>
 #include <string_view>
+
+#include "../include/server/http/http_types.h"
+#include "../include/server/http/response.h"
 
 namespace http = server::http;
 
@@ -27,7 +26,7 @@ auto count_occurrences(std::string_view text, std::string_view target) -> std::s
   return count;
 }
 
-}
+}  // namespace
 
 TEST_CASE("Default OK response has correct status line") {
   http::Response res{http::Status::ok};
@@ -46,8 +45,7 @@ TEST_CASE("Response serializes the configured HTTP version") {
 }
 
 TEST_CASE("Status codes serialize with correct status phrases") {
-  REQUIRE(http::Response{http::Status::ok}.to_string().starts_with(
-      "HTTP/1.1 200 OK\r\n"));
+  REQUIRE(http::Response{http::Status::ok}.to_string().starts_with("HTTP/1.1 200 OK\r\n"));
 
   REQUIRE(http::Response{http::Status::bad_request}.to_string().starts_with(
       "HTTP/1.1 400 Bad Request\r\n"));

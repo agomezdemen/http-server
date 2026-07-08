@@ -7,11 +7,11 @@
 // Owns a listening TCP socket for one endpoint.
 // Accepted clients are returned as Fd objects so ownership stays explicit.
 class TcpListener {
-private:
+ private:
   Endpoint ep_;
   Fd sfd_;
 
-public:
+ public:
   explicit TcpListener(Endpoint ep, int backlog = 128);
 
   TcpListener(const TcpListener&) = delete;
@@ -30,4 +30,4 @@ public:
   auto valid() const noexcept -> bool;
 };
 
-#endif // !TCP_LISTENER
+#endif  // !TCP_LISTENER

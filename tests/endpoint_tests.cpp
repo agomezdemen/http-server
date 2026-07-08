@@ -1,7 +1,8 @@
-#include "../include/server/net/endpoint.h"
 #include <catch2/catch_test_macros.hpp>
 #include <type_traits>
 #include <utility>
+
+#include "../include/server/net/endpoint.h"
 
 // Endpoint is intentionally small: it only stores the user-facing address data.
 TEST_CASE("Endpoint constructs with host and port") {
@@ -20,7 +21,7 @@ TEST_CASE("Endpoint is copyable") {
 
   Endpoint ep_2{ep_1};
 
-  REQUIRE(ep_1.host() == "127.0.0.1"); 
+  REQUIRE(ep_1.host() == "127.0.0.1");
   REQUIRE(ep_2.host() == "127.0.0.1");
   REQUIRE(ep_1.port() == 8080);
   REQUIRE(ep_2.port() == 8080);

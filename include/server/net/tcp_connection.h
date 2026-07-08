@@ -1,18 +1,19 @@
 #ifndef TCP_CONNECTION_H
 #define TCP_CONNECTION_H
 
-#include "../../platform/fd.h"
-#include "endpoint.h"
-
 #include <span>
 #include <string_view>
 
-class TcpConnection {
-private:
-  Endpoint peer_; // connected peer
-  Fd cfd_; // connection fd
+#include "../../platform/fd.h"
+#include "endpoint.h"
 
-public:
+// Owns one accepted stream socket and exposes blocking read/write operations.
+class TcpConnection {
+ private:
+  Endpoint peer_;  // Connected peer address.
+  Fd cfd_;         // Connected socket descriptor.
+
+ public:
   TcpConnection(Fd cfd, Endpoint peer);
 
   TcpConnection(const TcpConnection&) = delete;
@@ -20,7 +21,7 @@ public:
 
   TcpConnection(TcpConnection&&) noexcept = default;
   auto operator=(TcpConnection&&) noexcept -> TcpConnection& = default;
-  
+
   ~TcpConnection() noexcept = default;
 
   auto read(std::span<char> buffer) -> std::size_t;
@@ -32,4 +33,4 @@ public:
   auto valid() const noexcept -> bool;
 };
 
-#endif // !TCP_CONNECTION_H
+#endif  // !TCP_CONNECTION_H

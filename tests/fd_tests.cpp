@@ -1,44 +1,45 @@
-#include "../include/platform/fd.h"
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <catch2/catch_test_macros.hpp>
 #include <cerrno>
-#include <fcntl.h>
 #include <type_traits>
-#include <unistd.h>
 #include <utility>
 
+#include "../include/platform/fd.h"
+
 namespace {
-  
-  struct Pipe {
-    int read_end;
-    int write_end;
-  };
 
-  // Pipes give the tests real file descriptors without touching the filesystem.
-  Pipe make_pipe() {
-    int fds[2] {};
+// Owns the raw pipe ends until each test transfers them into Fd wrappers.
+struct Pipe {
+  int read_end;
+  int write_end;
+};
 
-    REQUIRE(::pipe(fds) == 0);
+// Pipes give the tests real file descriptors without touching the filesystem.
+Pipe make_pipe() {
+  int fds[2]{};
 
-    return Pipe{
+  REQUIRE(::pipe(fds) == 0);
+
+  return Pipe{
       .read_end = fds[0],
       .write_end = fds[1],
-    };
-  }
-
-  bool fd_is_closed(int fd) {
-    errno = 0;
-    const int result = ::fcntl(fd, F_GETFD);
-
-    // EBADF is the expected kernel response for a descriptor that is no longer open.
-    return result == -1 && errno == EBADF;
-  }
-
-  bool fd_is_open(int fd) {
-    return !fd_is_closed(fd);
-  }
-
+  };
 }
 
+// Query the kernel so tests can prove ownership changes closed the descriptor.
+bool fd_is_closed(int fd) {
+  errno = 0;
+  const int result = ::fcntl(fd, F_GETFD);
+
+  // EBADF is the expected kernel response for a descriptor that is no longer open.
+  return result == -1 && errno == EBADF;
+}
+
+bool fd_is_open(int fd) { return !fd_is_closed(fd); }
+
+}  // namespace
 
 TEST_CASE("Default constructed Fd is invalid") {
   Fd fd{};
@@ -81,9 +82,9 @@ TEST_CASE("Fd destructor closes owned fd") {
 
 TEST_CASE("Fd release returns fd and invalidates wrapper without closing fd") {
   const auto pipe = make_pipe();
-  
+
   Fd fd{pipe.read_end};
-  
+
   const int released_fd = fd.release();
 
   REQUIRE(released_fd == pipe.read_end);
@@ -97,89 +98,89 @@ TEST_CASE("Fd release returns fd and invalidates wrapper without closing fd") {
 }
 
 TEST_CASE("Fd move constructor transfers ownership") {
-    const auto pipe = make_pipe();
-    const int raw_fd = pipe.read_end;
+  const auto pipe = make_pipe();
+  const int raw_fd = pipe.read_end;
 
-    Fd original{raw_fd};
-    Fd moved{std::move(original)};
+  Fd original{raw_fd};
+  Fd moved{std::move(original)};
 
-    REQUIRE_FALSE(original.valid());
-    REQUIRE(original.get() == -1);
+  REQUIRE_FALSE(original.valid());
+  REQUIRE(original.get() == -1);
 
-    REQUIRE(moved.valid());
-    REQUIRE(moved.get() == raw_fd);
-    REQUIRE(fd_is_open(raw_fd));
+  REQUIRE(moved.valid());
+  REQUIRE(moved.get() == raw_fd);
+  REQUIRE(fd_is_open(raw_fd));
 
-    REQUIRE(::close(pipe.write_end) == 0);
+  REQUIRE(::close(pipe.write_end) == 0);
 }
 
 TEST_CASE("Fd move assignment transfers ownership") {
-    const auto pipe = make_pipe();
-    const int raw_fd = pipe.read_end;
+  const auto pipe = make_pipe();
+  const int raw_fd = pipe.read_end;
 
-    Fd source{raw_fd};
-    Fd destination{};
+  Fd source{raw_fd};
+  Fd destination{};
 
-    destination = std::move(source);
+  destination = std::move(source);
 
-    REQUIRE_FALSE(source.valid());
-    REQUIRE(source.get() == -1);
+  REQUIRE_FALSE(source.valid());
+  REQUIRE(source.get() == -1);
 
-    REQUIRE(destination.valid());
-    REQUIRE(destination.get() == raw_fd);
-    REQUIRE(fd_is_open(raw_fd));
+  REQUIRE(destination.valid());
+  REQUIRE(destination.get() == raw_fd);
+  REQUIRE(fd_is_open(raw_fd));
 
-    REQUIRE(::close(pipe.write_end) == 0);
+  REQUIRE(::close(pipe.write_end) == 0);
 }
 
 TEST_CASE("Fd move assignment closes destination's old fd") {
-    const auto old_pipe = make_pipe();
-    const auto new_pipe = make_pipe();
+  const auto old_pipe = make_pipe();
+  const auto new_pipe = make_pipe();
 
-    const int old_fd = old_pipe.read_end;
-    const int new_fd = new_pipe.read_end;
+  const int old_fd = old_pipe.read_end;
+  const int new_fd = new_pipe.read_end;
 
-    Fd destination{old_fd};
-    Fd source{new_fd};
+  Fd destination{old_fd};
+  Fd source{new_fd};
 
-    destination = std::move(source);
+  destination = std::move(source);
 
-    REQUIRE_FALSE(source.valid());
-    REQUIRE(source.get() == -1);
+  REQUIRE_FALSE(source.valid());
+  REQUIRE(source.get() == -1);
 
-    REQUIRE(destination.valid());
-    REQUIRE(destination.get() == new_fd);
+  REQUIRE(destination.valid());
+  REQUIRE(destination.get() == new_fd);
 
-    // Move assignment must not leak the descriptor destination already owned.
-    REQUIRE(fd_is_closed(old_fd));
-    REQUIRE(fd_is_open(new_fd));
+  // Move assignment must not leak the descriptor destination already owned.
+  REQUIRE(fd_is_closed(old_fd));
+  REQUIRE(fd_is_open(new_fd));
 
-    REQUIRE(::close(old_pipe.write_end) == 0);
-    REQUIRE(::close(new_pipe.write_end) == 0);
+  REQUIRE(::close(old_pipe.write_end) == 0);
+  REQUIRE(::close(new_pipe.write_end) == 0);
 }
 
 TEST_CASE("Fd self move assignment does not break ownership") {
-    const auto pipe = make_pipe();
-    const int raw_fd = pipe.read_end;
+  const auto pipe = make_pipe();
+  const int raw_fd = pipe.read_end;
 
-    Fd fd{raw_fd};
+  Fd fd{raw_fd};
 
-    fd = std::move(fd);
+  fd = std::move(fd);
 
-    REQUIRE(fd.valid());
-    REQUIRE(fd.get() == raw_fd);
-    REQUIRE(fd_is_open(raw_fd));
+  REQUIRE(fd.valid());
+  REQUIRE(fd.get() == raw_fd);
+  REQUIRE(fd_is_open(raw_fd));
 
-    REQUIRE(::close(pipe.write_end) == 0);
+  REQUIRE(::close(pipe.write_end) == 0);
 }
 
 TEST_CASE("Fd has correct copy and move properties") {
-    static_assert(!std::is_copy_constructible_v<Fd>);
-    static_assert(!std::is_copy_assignable_v<Fd>);
+  static_assert(!std::is_copy_constructible_v<Fd>);
+  static_assert(!std::is_copy_assignable_v<Fd>);
 
-    static_assert(std::is_move_constructible_v<Fd>);
-    static_assert(std::is_move_assignable_v<Fd>);
+  static_assert(std::is_move_constructible_v<Fd>);
+  static_assert(std::is_move_assignable_v<Fd>);
 
-    static_assert(std::is_nothrow_move_constructible_v<Fd>);
-    static_assert(std::is_nothrow_move_assignable_v<Fd>);
+  static_assert(std::is_nothrow_move_constructible_v<Fd>);
+  static_assert(std::is_nothrow_move_assignable_v<Fd>);
 }
