@@ -1,5 +1,5 @@
-#ifndef REQUEST_H
-#define REQUEST_H
+#ifndef HTTP_REQUEST_H
+#define HTTP_REQUEST_H
 
 #include <string>
 #include <string_view>
