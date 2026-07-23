@@ -17,16 +17,19 @@ namespace server::http {
     invalid_target,
     invalid_version,
     missing_colon,
+    empty_header,
     invalid_header_name,
     invalid_header_value,
-    empty_header_name
   };
 
   [[nodiscard]]
-  auto parse_request_line(std::string_view) -> std::expected<RequestLine, GrammarError>;
+  auto parse_request_line(std::string_view line) -> std::expected<RequestLine, GrammarError>;
 
   [[nodiscard]]
-  auto parse_header(std::string_view) -> std::expected<Header, GrammarError>;
+  auto parse_header(std::string_view header) -> std::expected<Header, GrammarError>;
+
+  [[nodiscard]]
+  auto is_valid_header_name(std::string_view name) noexcept -> bool;
   
 }
 

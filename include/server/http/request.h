@@ -14,7 +14,7 @@ class Request {
  private:
   std::vector<Header> headers_;
   std::string body_;
-  RequestLine request_line_ 
+  RequestLine request_line_; 
 
  public:
   explicit Request(Method method, std::string target, Version version) noexcept;
@@ -26,8 +26,8 @@ class Request {
   [[nodiscard]] auto get_headers() const noexcept -> std::span<const Header>;
   [[nodiscard]] auto get_target() const noexcept -> std::string_view;
   [[nodiscard]] auto get_body() const noexcept -> std::string_view;
-  [[nodiscard]] auto get_method() const noexcept -> const Method;
-  [[nodiscard]] auto get_version() const noexcept -> const Version;
+  [[nodiscard]] auto get_method() const noexcept -> Method;
+  [[nodiscard]] auto get_version() const noexcept -> Version;
 
   };
 }  // namespace server::http

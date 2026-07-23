@@ -14,7 +14,7 @@ namespace server::http {
     trace,
     put,
     delete_,
-  post,
+    post,
     patch,
     connect,
     unknown

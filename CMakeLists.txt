@@ -30,6 +30,7 @@ add_library(http_server_core
     src/http/request.cpp
     src/http/response.cpp
     src/http/parser.cpp
+    src/http/request_grammar.cpp
 
     src/server/connection.cpp
     src/server/event_loop.cpp

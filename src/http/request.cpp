@@ -46,18 +46,18 @@ namespace server::http {
   }
 
   auto Request::get_target() const noexcept -> std::string_view {
-    return target_;
+    return request_line_.target;
   }
 
   auto Request::get_body() const noexcept -> std::string_view {
     return body_;
   }
 
-  auto Request::get_method() const noexcept -> const Method {
-    return method_;
+  auto Request::get_method() const noexcept -> Method {
+    return request_line_.method;
   }
 
-  auto Request::get_version() const noexcept -> const Version {
-    return version_;
+  auto Request::get_version() const noexcept -> Version {
+    return request_line_.version;
   }
 }
