@@ -18,7 +18,8 @@ namespace server::http {
     invalid_version,
     missing_colon,
     invalid_header_name,
-    invalid_header_value
+    invalid_header_value,
+    empty_header_name
   };
 
   [[nodiscard]]

@@ -30,13 +30,12 @@ namespace server::http {
     auto target{line.substr(space_1 + 1, space_2 - space_1 - 1)};
     if(target.empty())
       return std::unexpected{GrammarError::empty_target};
-    if(target[0] != '/')
-      return std::unexpected{GrammarError::invalid_target};
 
 
     auto version{version_from_string(line.substr(space_2 + 1))};
     if(version == Version::unknown)
       return std::unexpected{GrammarError::invalid_version};
+
 
     return RequestLine{.method = method, 
                        .target = std::string{target},
@@ -44,7 +43,34 @@ namespace server::http {
   }
 
   auto parse_header(std::string_view header) -> std::expected<Header, GrammarError> {
+    if(header.empty())
+      return std::unexpected{GrammarError::empty_header};
 
+    constexpr auto delimiter{':'};
+    
+    auto colon{header.find(delimiter)};
+    if(colon == std::string_view::npos)
+      return std::unexpected{GrammarError::missing_colon};
+
+
+    auto name{header.substr(0uz, colon)};
+    if(name.empty())
+      return std::unexpected{GrammarError::empty_header_name};
+
+    auto value{header.substr(colon + 1)};
+    
+    while (!value.empty() &&
+           (value.front() == ' ' || value.front() == '\t')) {
+        value.remove_prefix(1);
+    }
+
+    while (!value.empty() &&
+           (value.back() == ' ' || value.back() == '\t')) {
+        value.remove_suffix(1);
+    }
+    
+    return Header{.name = std::string{name},
+                  .value = std::string{value}};
   }
 
 }
