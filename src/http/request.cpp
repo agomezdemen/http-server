@@ -8,7 +8,10 @@
 
 namespace server::http {
   Request::Request(Method method, std::string target, Version version) noexcept : 
-    headers_{}, target_{std::move(target)}, body_{}, method_{method}, version_{version} {}
+    headers_{}, body_{}, request_line_{RequestLine{.method = method, .target = std::move(target), .version = version}} {}
+
+  Request::Request(RequestLine request_line) noexcept :
+    headers_{}, body_{}, request_line_{std::move(request_line)} {}
 
   auto Request::set_header(std::string name, std::string value) -> void {
       

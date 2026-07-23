@@ -29,12 +29,12 @@ namespace server::http {
     ParseState state_{ParseState::request_line};
 
     std::optional<Request> request_;
-    std::size_t expected_body_size_{0uz};
+    std::optional<std::size_t> expected_body_size_;
 
-    auto parse_request_line() -> ParseStatus;
-    auto parse_header() -> ParseStatus;
-    auto parse_body() -> ParseStatus;
-    auto parse_current_state() -> ParseStatus;
+    auto process_request_line_state() -> ParseStatus;
+    auto process_headers_state() -> ParseStatus;
+    auto process_body_state() -> ParseStatus;
+    auto process_current_state() -> ParseStatus;
 
   public:
     [[nodiscard]] auto consume(std::string_view bytes) -> ParseStatus;

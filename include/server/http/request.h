@@ -13,13 +13,12 @@ namespace server::http {
 class Request {
  private:
   std::vector<Header> headers_;
-  std::string target_;
   std::string body_;
-  Method method_;
-  Version version_;
+  RequestLine request_line_ 
 
  public:
   explicit Request(Method method, std::string target, Version version) noexcept;
+  explicit Request(RequestLine request_line) noexcept;
 
   auto set_header(std::string name, std::string value) -> void;
   auto set_header(Header header) -> void;
