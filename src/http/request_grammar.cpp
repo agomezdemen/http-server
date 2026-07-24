@@ -16,7 +16,7 @@ namespace server::http {
     
     const auto space_1{line.find(delimiter)};
     if(space_1 == std::string_view::npos)
-  return std::unexpected{GrammarError::missing_separator};
+      return std::unexpected{GrammarError::missing_separator};
 
 
     const auto method{method_from_string(line.substr(0uz, space_1))};

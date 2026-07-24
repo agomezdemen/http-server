@@ -19,6 +19,7 @@ namespace server::http {
 
   enum class ParseStatus : std::uint8_t {
     complete,
+    progress,
     need_more_data,
     invalid
   };
