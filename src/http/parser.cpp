@@ -57,21 +57,21 @@ namespace server::http {
     if(result->name == "Content-Length") {
       if(expected_body_size_.has_value() || result->value.empty()) {
         state_ = ParseState::error;
-        return ParseState::invalid;
+        return ParseStatus::invalid;
       }
       
       std::size_t body_size{};
 
       const auto first{result->value.data()};
       const auto last{first + result->value.size()};
-      const auto [ptr, error]{std::from_chars(first, last, body_size)};
+      const auto [ptr, error]{std::from_chars(first + 1, last, body_size)};
 
       if(error != std::errc{} || ptr != last) {
         state_ = ParseState::error;
         return ParseStatus::invalid;
       }
 
-      *expected_body_size_ = body_size;
+      expected_body_size_ = body_size;
     }
 
     request_->set_header(result->name, result->value);
@@ -87,7 +87,7 @@ namespace server::http {
       return ParseStatus::need_more_data;
 
     request_->set_body(buffer_.substr(0uz, body_size));
-    buffer_.erase(0uz, expected_body_size_);
+    buffer_.erase(0uz, body_size);
 
     state_ = ParseState::complete;
     return ParseStatus::complete;
@@ -132,4 +132,8 @@ namespace server::http {
     request_ = std::nullopt;
     expected_body_size_ = std::nullopt; 
   }
+}
+
+auto get_state() const noexcept -> ParseState {
+  return state_;
 }

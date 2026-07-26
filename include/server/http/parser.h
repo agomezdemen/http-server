@@ -41,7 +41,8 @@ namespace server::http {
     [[nodiscard]] auto consume(std::string_view bytes) -> ParseStatus;
     
     [[nodiscard]] auto take_request() -> std::optional<Request>;
-
+    
+    auto get_state() const noexcept -> ParseState;
     auto reset() -> void;
   };
 }
