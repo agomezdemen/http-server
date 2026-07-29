@@ -5,8 +5,6 @@
 #include <algorithm>
 #include <utility>
 
-#include <iostream>
-
 namespace server::http {
 
   auto RequestParser::process_request_line_state() -> ParseStatus {
