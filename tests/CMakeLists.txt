@@ -20,6 +20,7 @@ http_server_add_catch_test(tcp_connection_tests tcp_connection_tests.cpp)
 http_server_add_catch_test(response_tests response_tests.cpp)
 http_server_add_catch_test(request_tests request_tests.cpp)
 http_server_add_catch_test(grammar_tests grammar_tests.cpp)
+http_server_add_catch_test(parser_tests parser_tests.cpp)
 
 include(Catch)
 
@@ -45,5 +46,9 @@ catch_discover_tests(request_tests
 )
 
 catch_discover_tests(grammar_tests
+  DISCOVERY_MODE PRE_TEST
+)
+
+catch_discover_tests(parser_tests
   DISCOVERY_MODE PRE_TEST
 )

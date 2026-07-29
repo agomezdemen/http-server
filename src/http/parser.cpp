@@ -1,8 +1,11 @@
 #include "../../include/server/http/parser.h"
+#include "../../include/server/http/request_grammar.h"
 
 #include <charconv>
 #include <algorithm>
 #include <utility>
+
+#include <iostream>
 
 namespace server::http {
 
@@ -26,7 +29,7 @@ namespace server::http {
     buffer_.erase(0uz, line_end + 2);
     state_ = ParseState::headers;
    
-    return ParseStatus::progress;
+    return ParseStatus::progressed;
   }
 
   auto RequestParser::process_headers_state() -> ParseStatus {
@@ -39,7 +42,7 @@ namespace server::http {
       }
 
       state_ = ParseState::body;
-      return ParseStatus::progress;
+      return ParseStatus::progressed;
     }
 
     const auto header_end{buffer_.find("\r\n")};
@@ -54,7 +57,7 @@ namespace server::http {
       return ParseStatus::invalid;
     }
 
-    if(result->name == "Content-Length") {
+    if(result->name == "Content-Length" || result->name == "content-length") {
       if(expected_body_size_.has_value() || result->value.empty()) {
         state_ = ParseState::error;
         return ParseStatus::invalid;
@@ -64,7 +67,7 @@ namespace server::http {
 
       const auto first{result->value.data()};
       const auto last{first + result->value.size()};
-      const auto [ptr, error]{std::from_chars(first + 1, last, body_size)};
+      const auto [ptr, error]{std::from_chars(first, last, body_size)};
 
       if(error != std::errc{} || ptr != last) {
         state_ = ParseState::error;
@@ -75,9 +78,9 @@ namespace server::http {
     }
 
     request_->set_header(result->name, result->value);
-    buffer_.erase(0uz, header_end + 2uz);
+    buffer_.erase(0uz, header_end + 2);
     
-    return ParseStatus::progress;
+    return ParseStatus::progressed;
   }
 
   auto RequestParser::process_body_state() -> ParseStatus {
@@ -106,6 +109,8 @@ namespace server::http {
       case ParseState::error:
         return ParseStatus::invalid; 
     }
+
+    return ParseStatus::invalid;
   }
 
   auto RequestParser::consume(std::string_view bytes) -> ParseStatus {
@@ -113,9 +118,9 @@ namespace server::http {
 
     while(true) {
       const auto status{process_current_state()};
-
-      if(status != ParseStatus::progress)
-        return status;
+      
+      if(status != ParseStatus::progressed)
+          return status;
     }
   }
 
@@ -132,8 +137,15 @@ namespace server::http {
     request_ = std::nullopt;
     expected_body_size_ = std::nullopt; 
   }
+
+
+  auto RequestParser::is_buffer_empty() const noexcept -> bool {
+    return buffer_.empty();
+  }
+
+  auto RequestParser::get_state() const noexcept -> ParseState {
+    return state_;
+  }
 }
 
-auto get_state() const noexcept -> ParseState {
-  return state_;
-}
+

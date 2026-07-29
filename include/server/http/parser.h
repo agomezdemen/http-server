@@ -19,7 +19,7 @@ namespace server::http {
 
   enum class ParseStatus : std::uint8_t {
     complete,
-    progress,
+    progressed,
     need_more_data,
     invalid
   };
@@ -38,10 +38,13 @@ namespace server::http {
     auto process_current_state() -> ParseStatus;
 
   public:
+    RequestParser() = default;
+
     [[nodiscard]] auto consume(std::string_view bytes) -> ParseStatus;
     
     [[nodiscard]] auto take_request() -> std::optional<Request>;
-    
+   
+    auto is_buffer_empty() const noexcept -> bool;
     auto get_state() const noexcept -> ParseState;
     auto reset() -> void;
   };

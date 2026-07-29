@@ -61,13 +61,11 @@ namespace server::http {
 
     auto value{header.substr(colon + 1)};
     
-    while (!value.empty() &&
-           (value.front() == ' ' || value.front() == '\t')) {
+    while (!value.empty() && (value.front() == ' ' || value.front() == '\t')) {
         value.remove_prefix(1);
     }
 
-    while (!value.empty() &&
-           (value.back() == ' ' || value.back() == '\t')) {
+    while (!value.empty() && (value.back() == ' ' || value.back() == '\t')) {
         value.remove_suffix(1);
     }
     

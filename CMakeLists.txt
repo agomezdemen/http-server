@@ -23,18 +23,11 @@ add_library(http_server_core
     src/net/endpoint.cpp
     src/net/tcp_listener.cpp
     src/net/tcp_connection.cpp
-    src/net/epoll.cpp
-
-    src/io/buffer.cpp
 
     src/http/request.cpp
     src/http/response.cpp
     src/http/parser.cpp
     src/http/request_grammar.cpp
-
-    src/server/connection.cpp
-    src/server/event_loop.cpp
-    src/server/server.cpp
 )
 
 add_library(http::server_core ALIAS http_server_core)

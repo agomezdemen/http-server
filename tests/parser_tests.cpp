@@ -1,44 +1,275 @@
 #include <catch2/catch_test_macros.hpp>
+#include <string_view>
 
 #include "../include/server/http/parser.h"
 
-TEST_CASE("Complete GET request in one call") {}
+using server::http::ParseStatus;
+using server::http::RequestParser;
 
-TEST_CASE("Request line split between multiple calls") {}
+TEST_CASE("Complete GET request in one call") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n\r\n"};
 
-TEST_CASE("Header split between calls") {}
+  RequestParser parser{};
 
-TEST_CASE("Carraige return and new line split between calls") {}
+  const auto result{parser.consume(request)};
+  REQUIRE(result == ParseStatus::complete);
+}
 
-TEST_CASE("Body split between multiple calls") {}
+TEST_CASE("Request line split between multiple calls") {
+  constexpr std::string_view bytes_1{"GET "};
+  constexpr std::string_view bytes_2{"/ HTT"};
+  constexpr std::string_view bytes_3{"P/1.1"};
+  constexpr std::string_view bytes_4{"\r\n"};
 
-TEST_CASE("Request split at every possible byte position") {}
+  RequestParser parser{};
 
-TEST_CASE("Multiple headers") {}
+  const auto result_1{parser.consume(bytes_1)};
+  REQUIRE(result_1 == ParseStatus::need_more_data);
 
-TEST_CASE("No body") {}
+  const auto result_2{parser.consume(bytes_2)};
+  REQUIRE(result_2 == ParseStatus::need_more_data);
 
-TEST_CASE("Content-Length: 0") {}
+  const auto result_3{parser.consume(bytes_3)};
+  REQUIRE(result_3 == ParseStatus::need_more_data);
 
-TEST_CASE("Normal Content-Length: 5 with a space") {}
+  const auto result_4{parser.consume(bytes_4)};
+  REQUIRE(result_4 == ParseStatus::need_more_data);
+}
 
-TEST_CASE("Lowercase content-length") {}
+TEST_CASE("Header split between calls") {
+  constexpr std::string_view request_line{"GET / HTTP/1.1\r\n"};
+  constexpr std::string_view header_1{"Accept-Language"};
+  constexpr std::string_view header_2{": en\r\n"};
+  constexpr std::string_view eoh{"\r\n"};
 
-TEST_CASE("Invalid and duplicate Content-Length") {}
+  RequestParser parser{};
 
-TEST_CASE("Body shorter than Content-Length returns need_more_data") {}
+  const auto request_line_result{parser.consume(request_line)};
+  REQUIRE(request_line_result == ParseStatus::need_more_data);
 
-TEST_CASE("Body exactly matching Content-Length completes") {}
+  const auto result_1{parser.consume(header_1)};
+  REQUIRE(result_1 == ParseStatus::need_more_data);
 
-TEST_CASE("Extra bytes after the body remain unconsumed") {}
+  const auto result_2{parser.consume(header_2)};
+  REQUIRE(result_2 == ParseStatus::need_more_data);
 
-TEST_CASE("Malformed request line and malformed header produce invalid") {}
+  const auto result_3{parser.consume(eoh)};
+  REQUIRE(result_3 == ParseStatus::complete);
+}
 
-TEST_CASE("take_request() before completion returns nullopt") {}
+TEST_CASE("Carriage return and newline split between calls") {
+  constexpr std::string_view bytes_1{"GET / HTTP/1.1\r"};
+  constexpr std::string_view bytes_2{"\n"};
 
-TEST_CASE("take_request() after completion returns the request") {}
+  RequestParser parser{};
 
-TEST_CASE("A second take_requst returns nullopt") {}
+  const auto result_1{parser.consume(bytes_1)};
+  REQUIRE(result_1 == ParseStatus::need_more_data);
 
-TEST_CASE("reset() allows another request to be parsed") {}
+  const auto result_2{parser.consume(bytes_2)};
+  REQUIRE(result_2 == ParseStatus::need_more_data);
+}
 
+TEST_CASE("Body split between multiple calls") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n"
+                                     "Content-Length: 10\r\n"
+                                     "\r\n"};
+  constexpr std::string_view body_1{"hello"};
+  constexpr std::string_view body_2{"hello"};
+
+  RequestParser parser{};
+
+  const auto request_result{parser.consume(request)};
+  REQUIRE(request_result == ParseStatus::need_more_data);
+
+  const auto result_1{parser.consume(body_1)};
+  REQUIRE(result_1 == ParseStatus::need_more_data);
+
+  const auto result_2{parser.consume(body_2)};
+  REQUIRE(result_2 == ParseStatus::complete);
+}
+
+TEST_CASE("Request split at every possible byte position") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n\r\n"};
+
+  for(auto split{1uz}; split < request.length(); ++split) {
+    CAPTURE(split);
+
+    RequestParser parser{};
+
+    const auto first_result{parser.consume(request.substr(0uz, split))};
+    REQUIRE(first_result == ParseStatus::need_more_data);
+
+    const auto second_result{parser.consume(request.substr(split))};
+    REQUIRE(second_result == ParseStatus::complete);
+  }
+}
+
+TEST_CASE("Multiple headers") {
+  constexpr std::string_view request_line{"GET / HTTP/1.1\r\n"};
+  constexpr std::string_view header_1{"Host: awesome.com\r\n"};
+  constexpr std::string_view header_2{"Accept-Language: en\r\n\r\n"};
+
+  RequestParser parser{};
+
+  const auto request_line_result{parser.consume(request_line)};
+  REQUIRE(request_line_result == ParseStatus::need_more_data);
+
+  const auto result_1{parser.consume(header_1)};
+  REQUIRE(result_1 == ParseStatus::need_more_data);
+
+  const auto result_2{parser.consume(header_2)};
+  REQUIRE(result_2 == ParseStatus::complete);
+}
+
+TEST_CASE("Content-Length: 0") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n"
+                                     "Content-Length: 0\r\n"
+                                     "\r\n"};
+
+  RequestParser parser{};
+
+  const auto result{parser.consume(request)};
+  REQUIRE(result == ParseStatus::complete);
+}
+
+TEST_CASE("Content-Length: 5 with a space") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n"
+                                     "Content-Length: 5\r\n"
+                                     "\r\n"
+                                     "hello"};
+
+  RequestParser parser{};
+
+  const auto result{parser.consume(request)};
+  REQUIRE(result == ParseStatus::complete);
+}
+
+TEST_CASE("Lowercase content-length") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n"
+                                     "content-length: 5\r\n"
+                                     "\r\n"
+                                     "hello"};
+
+  RequestParser parser{};
+
+  const auto result{parser.consume(request)};
+  REQUIRE(result == ParseStatus::complete);
+}
+
+TEST_CASE("Conflicting duplicate Content-Length produces invalid") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n"
+                                     "Content-Length: 0\r\n"};
+  constexpr std::string_view duplicate{"Content-Length: 5\r\n"
+                                       "\r\n"};
+
+  RequestParser parser{};
+
+  const auto request_result{parser.consume(request)};
+  REQUIRE(request_result == ParseStatus::need_more_data);
+
+  const auto result{parser.consume(duplicate)};
+  REQUIRE(result == ParseStatus::invalid);
+}
+
+TEST_CASE("Body shorter than Content-Length returns need_more_data") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n"
+                                     "Content-Length: 5\r\n"
+                                     "\r\n"
+                                     "1234"};
+
+  RequestParser parser{};
+
+  const auto result{parser.consume(request)};
+  REQUIRE(result == ParseStatus::need_more_data);
+}
+
+TEST_CASE("Extra bytes after the body remain unconsumed") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n"
+                                     "Content-Length: 5\r\n"
+                                     "\r\n"
+                                     "hellopoeinpoeir"};
+
+  RequestParser parser{};
+
+  const auto result{parser.consume(request)};
+  REQUIRE(result == ParseStatus::complete);
+
+  REQUIRE_FALSE(parser.is_buffer_empty());
+}
+
+TEST_CASE("Malformed request line produces invalid") {
+  constexpr std::string_view request_line{"Got . http3.5\r\n"};
+
+  RequestParser parser{};
+
+  const auto result{parser.consume(request_line)};
+  REQUIRE(result == ParseStatus::invalid);
+}
+
+TEST_CASE("Malformed header produces invalid") {
+  constexpr std::string_view request_line{"GET / HTTP/1.1\r\n"};
+  constexpr std::string_view header{"bad header ; pwe844\r\n"};
+
+  RequestParser parser{};
+
+  const auto request_line_result{parser.consume(request_line)};
+  REQUIRE(request_line_result == ParseStatus::need_more_data);
+
+  const auto result{parser.consume(header)};
+  REQUIRE(result == ParseStatus::invalid);
+}
+
+TEST_CASE("take_request() before completion returns nullopt") {
+  RequestParser parser{};
+
+  const auto request{parser.take_request()};
+  REQUIRE_FALSE(request.has_value());
+}
+
+TEST_CASE("take_request() after completion returns the request") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n\r\n"};
+
+  RequestParser parser{};
+
+  const auto result{parser.consume(request)};
+  REQUIRE(result == ParseStatus::complete);
+
+  const auto final_request{parser.take_request()};
+  REQUIRE(final_request.has_value());
+}
+
+TEST_CASE("A second take_request() returns nullopt") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n\r\n"};
+
+  RequestParser parser{};
+
+  const auto result{parser.consume(request)};
+  REQUIRE(result == ParseStatus::complete);
+
+  const auto final_request{parser.take_request()};
+  REQUIRE(final_request.has_value());
+
+  const auto second{parser.take_request()};
+  REQUIRE_FALSE(second.has_value());
+}
+
+TEST_CASE("reset() allows another request to be parsed") {
+  constexpr std::string_view request{"GET / HTTP/1.1\r\n\r\n"};
+
+  RequestParser parser{};
+
+  const auto first_result{parser.consume(request)};
+  REQUIRE(first_result == ParseStatus::complete);
+
+  const auto first_request{parser.take_request()};
+  REQUIRE(first_request.has_value());
+
+  parser.reset();
+
+  const auto second_result{parser.consume(request)};
+  REQUIRE(second_result == ParseStatus::complete);
+
+  const auto second_request{parser.take_request()};
+  REQUIRE(second_request.has_value());
+}
