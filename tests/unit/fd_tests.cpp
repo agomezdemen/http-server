@@ -43,14 +43,14 @@ bool fd_is_open(int fd) { return !fd_is_closed(fd); }
 
 }  // namespace
 
-TEST_CASE("Default constructed Fd is invalid") {
+TEST_CASE("Default constructed Fd is invalid", "[unit][fd]") {
   platform::Fd fd{};
 
   REQUIRE_FALSE(fd.valid());
   REQUIRE(fd.get() == -1);
 }
 
-TEST_CASE("Fd constructed from raw fd owns the fd") {
+TEST_CASE("Fd constructed from raw fd owns the fd", "[unit][fd]") {
   const auto pipe = make_pipe();
 
   {
@@ -67,7 +67,7 @@ TEST_CASE("Fd constructed from raw fd owns the fd") {
   REQUIRE(::close(pipe.write_end) == 0);
 }
 
-TEST_CASE("Fd destructor closes owned fd") {
+TEST_CASE("Fd destructor closes owned fd", "[unit][fd]") {
   const auto pipe = make_pipe();
   const int raw_fd = pipe.read_end;
 
@@ -82,7 +82,7 @@ TEST_CASE("Fd destructor closes owned fd") {
   REQUIRE(::close(pipe.write_end) == 0);
 }
 
-TEST_CASE("Fd release returns fd and invalidates wrapper without closing fd") {
+TEST_CASE("Fd release returns fd and invalidates wrapper without closing fd", "[unit][fd]") {
   const auto pipe = make_pipe();
 
   platform::Fd fd{pipe.read_end};
@@ -99,7 +99,7 @@ TEST_CASE("Fd release returns fd and invalidates wrapper without closing fd") {
   REQUIRE(::close(pipe.write_end) == 0);
 }
 
-TEST_CASE("Fd move constructor transfers ownership") {
+TEST_CASE("Fd move constructor transfers ownership", "[unit][fd]") {
   const auto pipe = make_pipe();
   const int raw_fd = pipe.read_end;
 
@@ -116,7 +116,7 @@ TEST_CASE("Fd move constructor transfers ownership") {
   REQUIRE(::close(pipe.write_end) == 0);
 }
 
-TEST_CASE("Fd move assignment transfers ownership") {
+TEST_CASE("Fd move assignment transfers ownership", "[unit][fd]") {
   const auto pipe = make_pipe();
   const int raw_fd = pipe.read_end;
 
@@ -135,7 +135,7 @@ TEST_CASE("Fd move assignment transfers ownership") {
   REQUIRE(::close(pipe.write_end) == 0);
 }
 
-TEST_CASE("Fd move assignment closes destination's old fd") {
+TEST_CASE("Fd move assignment closes destination's old fd", "[unit][fd]") {
   const auto old_pipe = make_pipe();
   const auto new_pipe = make_pipe();
 
@@ -161,7 +161,7 @@ TEST_CASE("Fd move assignment closes destination's old fd") {
   REQUIRE(::close(new_pipe.write_end) == 0);
 }
 
-TEST_CASE("Fd self move assignment does not break ownership") {
+TEST_CASE("Fd self move assignment does not break ownership", "[unit][fd]") {
   const auto pipe = make_pipe();
   const int raw_fd = pipe.read_end;
 
@@ -176,7 +176,7 @@ TEST_CASE("Fd self move assignment does not break ownership") {
   REQUIRE(::close(pipe.write_end) == 0);
 }
 
-TEST_CASE("Fd has correct copy and move properties") {
+TEST_CASE("Fd has correct copy and move properties", "[unit][fd]") {
   static_assert(!std::is_copy_constructible_v<platform::Fd>);
   static_assert(!std::is_copy_assignable_v<platform::Fd>);
 

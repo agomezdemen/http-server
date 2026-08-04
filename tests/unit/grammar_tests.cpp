@@ -5,14 +5,14 @@
 
 namespace http = server::http;
 
-TEST_CASE("Empty line returns empty request line error") {
+TEST_CASE("Empty line returns empty request line error", "[unit][grammar]") {
   const auto result{http::parse_request_line("")};
 
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == http::GrammarError::empty_request_line);
 }
 
-TEST_CASE("Missing separator returns missing separator error") {
+TEST_CASE("Missing separator returns missing separator error", "[unit][grammar]") {
   SECTION("First separator missing") {
     const auto result_1{http::parse_request_line("GET")};
 
@@ -28,28 +28,28 @@ TEST_CASE("Missing separator returns missing separator error") {
   }
 }
 
-TEST_CASE("Invalid method returns invalid method error") {
+TEST_CASE("Invalid method returns invalid method error", "[unit][grammar]") {
   const auto result{http::parse_request_line("HELLO / HTTP/1.1")};
 
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == http::GrammarError::invalid_method);
 }
 
-TEST_CASE("Empty target returns empty target error") {
+TEST_CASE("Empty target returns empty target error", "[unit][grammar]") {
   const auto result{http::parse_request_line("GET  ")};
 
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == http::GrammarError::empty_target);
 }
 
-TEST_CASE("Invalid version returns invalid version error") {
+TEST_CASE("Invalid version returns invalid version error", "[unit][grammar]") {
   const auto result{http::parse_request_line("GET / ht48")};
 
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == http::GrammarError::invalid_version);
 }
 
-TEST_CASE("Request line is parsed correctly") {
+TEST_CASE("Request line is parsed correctly", "[unit][grammar]") {
   const auto result{http::parse_request_line("GET / HTTP/1.1")};
 
   REQUIRE(result.has_value());
@@ -59,40 +59,40 @@ TEST_CASE("Request line is parsed correctly") {
 }
 
 
-TEST_CASE("Invalid header name returns false") {
+TEST_CASE("Invalid header name returns false", "[unit][grammar]") {
   auto valid{http::is_valid_header_name("  []}")};
 
   REQUIRE_FALSE(valid);
 }
 
-TEST_CASE("Valid header name returns true") {
+TEST_CASE("Valid header name returns true", "[unit][grammar]") {
   const auto valid{http::is_valid_header_name("Name!#$%^&|")};
 
   REQUIRE(valid);
 }
 
-TEST_CASE("Empty header returns empty header error") {
+TEST_CASE("Empty header returns empty header error", "[unit][grammar]") {
   const auto result{http::parse_header("")};
 
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == http::GrammarError::empty_header);
 }
 
-TEST_CASE("Header with missing colon returns missing colon error") {
+TEST_CASE("Header with missing colon returns missing colon error", "[unit][grammar]") {
   const auto result{http::parse_header("Name Value")};
 
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == http::GrammarError::missing_colon);
 }
 
-TEST_CASE("Invalid header name returns invalid header name error") {
+TEST_CASE("Invalid header name returns invalid header name error", "[unit][grammar]") {
   const auto result{http::parse_header("[]: Value")};
 
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == http::GrammarError::invalid_header_name);
 }
 
-TEST_CASE("Header is parsed correctly") {
+TEST_CASE("Header is parsed correctly", "[unit][grammar]") {
   SECTION("Ideal header parse") {
     const auto result_1{http::parse_header("Host: 127.0.0.1")};
 
@@ -110,14 +110,14 @@ TEST_CASE("Header is parsed correctly") {
   }
 }
 
-TEST_CASE("Empty header name returns invalid header name error") {
+TEST_CASE("Empty header name returns invalid header name error", "[unit][grammar]") {
   const auto result{http::parse_header(": value")};
 
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == http::GrammarError::invalid_header_name);
 }
 
-TEST_CASE("Empty header value is parsed correctly") {
+TEST_CASE("Empty header value is parsed correctly", "[unit][grammar]") {
   const auto result{http::parse_header("Name:")};
 
   REQUIRE(result.has_value());
@@ -125,7 +125,7 @@ TEST_CASE("Empty header value is parsed correctly") {
   CHECK(result->value.empty());
 }
 
-TEST_CASE("Tabs surrounding header value are trimmed") {
+TEST_CASE("Tabs surrounding header value are trimmed", "[unit][grammar]") {
   const auto result{http::parse_header("Name:\t\tvalue\t\t")};
 
   REQUIRE(result.has_value());
@@ -133,7 +133,7 @@ TEST_CASE("Tabs surrounding header value are trimmed") {
   CHECK(result->value == "value");
 }
 
-TEST_CASE("Colon inside header value is preserved") {
+TEST_CASE("Colon inside header value is preserved", "[unit][grammar]") {
   const auto result{http::parse_header("Time: 12:30")};
 
   REQUIRE(result.has_value());
@@ -141,24 +141,22 @@ TEST_CASE("Colon inside header value is preserved") {
   CHECK(result->value == "12:30");
 }
 
-TEST_CASE("All valid header name symbols are accepted") {
+TEST_CASE("All valid header name symbols are accepted", "[unit][grammar]") {
   CHECK(http::is_valid_header_name("!#$%&'*+-.^_`|~"));
 }
 
-TEST_CASE("Header names containing control characters are rejected") {
+TEST_CASE("Header names containing control characters are rejected", "[unit][grammar]") {
   CHECK_FALSE(http::is_valid_header_name("Bad\nName"));
   CHECK_FALSE(http::is_valid_header_name("Bad\rName"));
   CHECK_FALSE(http::is_valid_header_name("Bad\tName"));
 
-  constexpr char name_with_null[]{
-      'B', 'a', 'd', '\0', 'N', 'a', 'm', 'e'
-  };
+  constexpr char name_with_null[]{'B', 'a', 'd', '\0', 'N', 'a', 'm', 'e'};
 
   CHECK_FALSE(http::is_valid_header_name(
       std::string_view{name_with_null, sizeof(name_with_null)}));
 }
 
-TEST_CASE("Header name containing non-ASCII byte is rejected") {
+TEST_CASE("Header name containing non-ASCII byte is rejected", "[unit][grammar]") {
   constexpr char non_ascii_name[]{
       'N', 'a', 'm', 'e', static_cast<char>(0x80)
   };
@@ -167,21 +165,21 @@ TEST_CASE("Header name containing non-ASCII byte is rejected") {
       std::string_view{non_ascii_name, sizeof(non_ascii_name)}));
 }
 
-TEST_CASE("Extra space before target returns empty target error") {
+TEST_CASE("Extra space before target returns empty target error", "[unit][grammar]") {
   const auto result{http::parse_request_line("GET  / HTTP/1.1")};
 
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == http::GrammarError::empty_target);
 }
 
-TEST_CASE("Extra space before version returns invalid version error") {
+TEST_CASE("Extra space before version returns invalid version error", "[unit][grammar]") {
   const auto result{http::parse_request_line("GET /  HTTP/1.1")};
 
   REQUIRE_FALSE(result.has_value());
   CHECK(result.error() == http::GrammarError::invalid_version);
 }
 
-TEST_CASE("Trailing space after version returns invalid version error") {
+TEST_CASE("Trailing space after version returns invalid version error", "[unit][grammar]") {
   const auto result{http::parse_request_line("GET / HTTP/1.1 ")};
 
   REQUIRE_FALSE(result.has_value());

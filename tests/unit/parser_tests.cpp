@@ -6,7 +6,7 @@
 using server::http::ParseStatus;
 using server::http::RequestParser;
 
-TEST_CASE("Complete GET request in one call") {
+TEST_CASE("Complete GET request in one call", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n\r\n"};
 
   RequestParser parser{};
@@ -15,7 +15,7 @@ TEST_CASE("Complete GET request in one call") {
   REQUIRE(result == ParseStatus::complete);
 }
 
-TEST_CASE("Request line split between multiple calls") {
+TEST_CASE("Request line split between multiple calls", "[unit][parser]") {
   constexpr std::string_view bytes_1{"GET "};
   constexpr std::string_view bytes_2{"/ HTT"};
   constexpr std::string_view bytes_3{"P/1.1"};
@@ -36,7 +36,7 @@ TEST_CASE("Request line split between multiple calls") {
   REQUIRE(result_4 == ParseStatus::need_more_data);
 }
 
-TEST_CASE("Header split between calls") {
+TEST_CASE("Header split between calls", "[unit][parser]") {
   constexpr std::string_view request_line{"GET / HTTP/1.1\r\n"};
   constexpr std::string_view header_1{"Accept-Language"};
   constexpr std::string_view header_2{": en\r\n"};
@@ -57,7 +57,7 @@ TEST_CASE("Header split between calls") {
   REQUIRE(result_3 == ParseStatus::complete);
 }
 
-TEST_CASE("Carriage return and newline split between calls") {
+TEST_CASE("Carriage return and newline split between calls", "[unit][parser]") {
   constexpr std::string_view bytes_1{"GET / HTTP/1.1\r"};
   constexpr std::string_view bytes_2{"\n"};
 
@@ -70,7 +70,7 @@ TEST_CASE("Carriage return and newline split between calls") {
   REQUIRE(result_2 == ParseStatus::need_more_data);
 }
 
-TEST_CASE("Body split between multiple calls") {
+TEST_CASE("Body split between multiple calls", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n"
                                      "Content-Length: 10\r\n"
                                      "\r\n"};
@@ -89,7 +89,7 @@ TEST_CASE("Body split between multiple calls") {
   REQUIRE(result_2 == ParseStatus::complete);
 }
 
-TEST_CASE("Request split at every possible byte position") {
+TEST_CASE("Request split at every possible byte position", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n\r\n"};
 
   for(auto split{1uz}; split < request.length(); ++split) {
@@ -105,7 +105,7 @@ TEST_CASE("Request split at every possible byte position") {
   }
 }
 
-TEST_CASE("Multiple headers") {
+TEST_CASE("Multiple headers", "[unit][parser]") {
   constexpr std::string_view request_line{"GET / HTTP/1.1\r\n"};
   constexpr std::string_view header_1{"Host: awesome.com\r\n"};
   constexpr std::string_view header_2{"Accept-Language: en\r\n\r\n"};
@@ -122,7 +122,7 @@ TEST_CASE("Multiple headers") {
   REQUIRE(result_2 == ParseStatus::complete);
 }
 
-TEST_CASE("Content-Length: 0") {
+TEST_CASE("Content-Length: 0", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n"
                                      "Content-Length: 0\r\n"
                                      "\r\n"};
@@ -133,7 +133,7 @@ TEST_CASE("Content-Length: 0") {
   REQUIRE(result == ParseStatus::complete);
 }
 
-TEST_CASE("Content-Length: 5 with a space") {
+TEST_CASE("Content-Length: 5 with a space", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n"
                                      "Content-Length: 5\r\n"
                                      "\r\n"
@@ -145,7 +145,7 @@ TEST_CASE("Content-Length: 5 with a space") {
   REQUIRE(result == ParseStatus::complete);
 }
 
-TEST_CASE("Lowercase content-length") {
+TEST_CASE("Lowercase content-length", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n"
                                      "content-length: 5\r\n"
                                      "\r\n"
@@ -157,7 +157,7 @@ TEST_CASE("Lowercase content-length") {
   REQUIRE(result == ParseStatus::complete);
 }
 
-TEST_CASE("Conflicting duplicate Content-Length produces invalid") {
+TEST_CASE("Conflicting duplicate Content-Length produces invalid", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n"
                                      "Content-Length: 0\r\n"};
   constexpr std::string_view duplicate{"Content-Length: 5\r\n"
@@ -172,7 +172,7 @@ TEST_CASE("Conflicting duplicate Content-Length produces invalid") {
   REQUIRE(result == ParseStatus::invalid);
 }
 
-TEST_CASE("Body shorter than Content-Length returns need_more_data") {
+TEST_CASE("Body shorter than Content-Length returns need_more_data", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n"
                                      "Content-Length: 5\r\n"
                                      "\r\n"
@@ -184,7 +184,7 @@ TEST_CASE("Body shorter than Content-Length returns need_more_data") {
   REQUIRE(result == ParseStatus::need_more_data);
 }
 
-TEST_CASE("Extra bytes after the body remain unconsumed") {
+TEST_CASE("Extra bytes after the body remain unconsumed", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n"
                                      "Content-Length: 5\r\n"
                                      "\r\n"
@@ -198,7 +198,7 @@ TEST_CASE("Extra bytes after the body remain unconsumed") {
   REQUIRE_FALSE(parser.is_buffer_empty());
 }
 
-TEST_CASE("Malformed request line produces invalid") {
+TEST_CASE("Malformed request line produces invalid", "[unit][parser]") {
   constexpr std::string_view request_line{"Got . http3.5\r\n"};
 
   RequestParser parser{};
@@ -207,7 +207,7 @@ TEST_CASE("Malformed request line produces invalid") {
   REQUIRE(result == ParseStatus::invalid);
 }
 
-TEST_CASE("Malformed header produces invalid") {
+TEST_CASE("Malformed header produces invalid", "[unit][parser]") {
   constexpr std::string_view request_line{"GET / HTTP/1.1\r\n"};
   constexpr std::string_view header{"bad header ; pwe844\r\n"};
 
@@ -220,14 +220,14 @@ TEST_CASE("Malformed header produces invalid") {
   REQUIRE(result == ParseStatus::invalid);
 }
 
-TEST_CASE("take_request() before completion returns nullopt") {
+TEST_CASE("take_request() before completion returns nullopt", "[unit][parser]") {
   RequestParser parser{};
 
   const auto request{parser.take_request()};
   REQUIRE_FALSE(request.has_value());
 }
 
-TEST_CASE("take_request() after completion returns the request") {
+TEST_CASE("take_request() after completion returns the request", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n\r\n"};
 
   RequestParser parser{};
@@ -239,7 +239,7 @@ TEST_CASE("take_request() after completion returns the request") {
   REQUIRE(final_request.has_value());
 }
 
-TEST_CASE("A second take_request() returns nullopt") {
+TEST_CASE("A second take_request() returns nullopt", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n\r\n"};
 
   RequestParser parser{};
@@ -254,7 +254,7 @@ TEST_CASE("A second take_request() returns nullopt") {
   REQUIRE_FALSE(second.has_value());
 }
 
-TEST_CASE("reset() allows another request to be parsed") {
+TEST_CASE("reset() allows another request to be parsed", "[unit][parser]") {
   constexpr std::string_view request{"GET / HTTP/1.1\r\n\r\n"};
 
   RequestParser parser{};

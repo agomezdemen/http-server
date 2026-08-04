@@ -28,7 +28,7 @@ auto count_occurrences(std::string_view text, std::string_view target) -> std::s
 
 }  // namespace
 
-TEST_CASE("Default OK response has correct status line") {
+TEST_CASE("Default OK response has correct status line", "[unit][response]") {
   http::Response res{http::Status::ok};
 
   const auto out{res.to_string()};
@@ -36,7 +36,7 @@ TEST_CASE("Default OK response has correct status line") {
   REQUIRE(out.starts_with("HTTP/1.1 200 OK\r\n"));
 }
 
-TEST_CASE("Response serializes the configured HTTP version") {
+TEST_CASE("Response serializes the configured HTTP version", "[unit][response]") {
   http::Response res{http::Status::ok, http::Version::unknown};
 
   const auto out{res.to_string()};
@@ -44,7 +44,7 @@ TEST_CASE("Response serializes the configured HTTP version") {
   REQUIRE(out.starts_with("UNKNOWN 200 OK\r\n"));
 }
 
-TEST_CASE("Status codes serialize with correct status phrases") {
+TEST_CASE("Status codes serialize with correct status phrases", "[unit][response]") {
   REQUIRE(http::Response{http::Status::ok}.to_string().starts_with("HTTP/1.1 200 OK\r\n"));
 
   REQUIRE(http::Response{http::Status::bad_request}.to_string().starts_with(
@@ -60,7 +60,7 @@ TEST_CASE("Status codes serialize with correct status phrases") {
       "HTTP/1.1 500 Internal Server Error\r\n"));
 }
 
-TEST_CASE("Body is serialized after CRLF CRLF separator") {
+TEST_CASE("Body is serialized after CRLF CRLF separator", "[unit][response]") {
   http::Response res{http::Status::ok};
   res.set_body("Hello world!");
 
@@ -69,7 +69,7 @@ TEST_CASE("Body is serialized after CRLF CRLF separator") {
   REQUIRE(out.contains("\r\n\r\nHello world!"));
 }
 
-TEST_CASE("Content-Length matches body size") {
+TEST_CASE("Content-Length matches body size", "[unit][response]") {
   http::Response res{http::Status::ok};
   res.set_body("Hello world!");
 
@@ -78,7 +78,7 @@ TEST_CASE("Content-Length matches body size") {
   REQUIRE(out.contains("Content-Length: 12\r\n"));
 }
 
-TEST_CASE("Empty body has Content-Length zero") {
+TEST_CASE("Empty body has Content-Length zero", "[unit][response]") {
   http::Response res{http::Status::ok};
 
   const auto out{res.to_string()};
@@ -86,7 +86,7 @@ TEST_CASE("Empty body has Content-Length zero") {
   REQUIRE(out.contains("Content-Length: 0\r\n"));
 }
 
-TEST_CASE("Custom headers are serialized") {
+TEST_CASE("Custom headers are serialized", "[unit][response]") {
   http::Response res{http::Status::ok};
   res.set_header("Content-Type", "text/plain");
 
@@ -95,7 +95,7 @@ TEST_CASE("Custom headers are serialized") {
   REQUIRE(out.contains("Content-Type: text/plain\r\n"));
 }
 
-TEST_CASE("Multiple different headers are serialized") {
+TEST_CASE("Multiple different headers are serialized", "[unit][response]") {
   http::Response res{http::Status::ok};
 
   res.set_header("Content-Type", "text/plain");
@@ -107,7 +107,7 @@ TEST_CASE("Multiple different headers are serialized") {
   REQUIRE(out.contains("Connection: close\r\n"));
 }
 
-TEST_CASE("set_header replaces existing header value") {
+TEST_CASE("set_header replaces existing header value", "[unit][response]") {
   http::Response res{http::Status::ok};
 
   res.set_header("Content-Type", "text/plain");
@@ -119,7 +119,7 @@ TEST_CASE("set_header replaces existing header value") {
   REQUIRE_FALSE(out.contains("Content-Type: text/plain\r\n"));
 }
 
-TEST_CASE("Complete response serializes exactly") {
+TEST_CASE("Complete response serializes exactly", "[unit][response]") {
   http::Response res{http::Status::ok};
 
   res.set_header("Content-Type", "text/plain");
@@ -135,7 +135,7 @@ TEST_CASE("Complete response serializes exactly") {
           "Hello");
 }
 
-TEST_CASE("Headers end before body begins") {
+TEST_CASE("Headers end before body begins", "[unit][response]") {
   http::Response res{http::Status::ok};
 
   res.set_header("Content-Type", "text/plain");
@@ -151,7 +151,7 @@ TEST_CASE("Headers end before body begins") {
   REQUIRE(body_pos > separator);
 }
 
-TEST_CASE("Content-Length handles body with null bytes") {
+TEST_CASE("Content-Length handles body with null bytes", "[unit][response]") {
   http::Response res{http::Status::ok};
 
   const std::string body{"abc\0def", 7};
@@ -163,7 +163,7 @@ TEST_CASE("Content-Length handles body with null bytes") {
   REQUIRE(out.ends_with(body));
 }
 
-TEST_CASE("Response uses CRLF line endings") {
+TEST_CASE("Response uses CRLF line endings", "[unit][response]") {
   http::Response res{http::Status::ok};
 
   res.set_body("Hi");
@@ -174,7 +174,7 @@ TEST_CASE("Response uses CRLF line endings") {
   REQUIRE(out.contains("\r\n\r\nHi"));
 }
 
-TEST_CASE("to_string does not duplicate Content-Length across calls") {
+TEST_CASE("to_string does not duplicate Content-Length across calls", "[unit][response]") {
   http::Response res{http::Status::ok};
 
   res.set_body("Hello");
@@ -190,7 +190,7 @@ TEST_CASE("to_string does not duplicate Content-Length across calls") {
   REQUIRE(count_occurrences(second, target) == 1);
 }
 
-TEST_CASE("Content-Length updates when body changes") {
+TEST_CASE("Content-Length updates when body changes", "[unit][response]") {
   http::Response res{http::Status::ok};
 
   res.set_body("Hello");

@@ -5,7 +5,7 @@
 
 namespace http = server::http;
 
-TEST_CASE("Request is initialized with the provided method target and version") {
+TEST_CASE("Request is initialized with the provided method target and version", "[unit][request]") {
   const http::Request request{http::Method::get, "/", http::Version::http_1_1};
   
   const auto headers{request.get_headers()};
@@ -21,7 +21,7 @@ TEST_CASE("Request is initialized with the provided method target and version") 
   REQUIRE(version == http::Version::http_1_1);
 }
 
-TEST_CASE("Request can add a header") {
+TEST_CASE("Request can add a header", "[unit][request]") {
   http::Request request{http::Method::get, "/", http::Version::http_1_1};
 
   request.set_header("Host", "localhost");
@@ -33,7 +33,7 @@ TEST_CASE("Request can add a header") {
   REQUIRE(headers[0].value == "localhost");
 }
 
-TEST_CASE("Setting an existing header updates its value") {
+TEST_CASE("Setting an existing header updates its value", "[unit][request]") {
   http::Request request{http::Method::get, "/", http::Version::http_1_1};
   
   request.set_header("Content-Type", "text/plain");
@@ -47,7 +47,7 @@ TEST_CASE("Setting an existing header updates its value") {
 }
 
 
-TEST_CASE("Request can add a header with a header type") {
+TEST_CASE("Request can add a header with a header type", "[unit][request]") {
   http::Request request{http::Method::get, "/", http::Version::http_1_1};
 
   request.set_header(http::Header{"Host", "localhost"});
@@ -59,7 +59,7 @@ TEST_CASE("Request can add a header with a header type") {
   REQUIRE(headers[0].value == "localhost");
 }
 
-TEST_CASE("Setting an existing header updates its value with a header type") {
+TEST_CASE("Setting an existing header updates its value with a header type", "[unit][request]") {
   http::Request request{http::Method::get, "/", http::Version::http_1_1};
   
   request.set_header(http::Header{"Content-Type", "text/plain"});
@@ -72,7 +72,7 @@ TEST_CASE("Setting an existing header updates its value with a header type") {
   REQUIRE(headers[0].value == "application/json");
 }
 
-TEST_CASE("Request can store a body") {
+TEST_CASE("Request can store a body", "[unit][request]") {
   http::Request request{http::Method::post, "/", http::Version::http_1_1};
 
   request.set_body(R"({"name":"John"})");

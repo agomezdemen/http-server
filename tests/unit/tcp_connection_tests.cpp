@@ -35,7 +35,7 @@ auto fake_peer() -> net::Endpoint {
 
 }  // namespace
 
-TEST_CASE("TcpConnection can read bytes sent by peer") {
+TEST_CASE("TcpConnection can read bytes sent by peer", "[unit][tcp_connection]") {
   auto [conn_fd, peer_fd] = make_socket_pair();
 
   net::TcpConnection conn{std::move(conn_fd), fake_peer()};
@@ -52,7 +52,7 @@ TEST_CASE("TcpConnection can read bytes sent by peer") {
   REQUIRE(std::string_view{buffer.data(), bytes_read} == msg);
 }
 
-TEST_CASE("TcpConnection can write bytes to peer") {
+TEST_CASE("TcpConnection can write bytes to peer", "[unit][tcp_connection]") {
   auto [conn_fd, peer_fd] = make_socket_pair();
 
   net::TcpConnection conn{std::move(conn_fd), fake_peer()};
@@ -71,7 +71,7 @@ TEST_CASE("TcpConnection can write bytes to peer") {
   REQUIRE(std::string_view{buffer.data(), static_cast<std::size_t>(bytes_read)} == msg);
 }
 
-TEST_CASE("TcpConnection read returns 0 when peer closes connection") {
+TEST_CASE("TcpConnection read returns 0 when peer closes connection", "[unit][tcp_connection]") {
   net::TcpConnection conn{platform::Fd{-1}, fake_peer()};
 
   std::array<char, 16> buffer{};
@@ -79,13 +79,13 @@ TEST_CASE("TcpConnection read returns 0 when peer closes connection") {
   REQUIRE_THROWS_AS(conn.read(buffer), std::system_error);
 }
 
-TEST_CASE("TcpConnection write throws when fd is invalid") {
+TEST_CASE("TcpConnection write throws when fd is invalid", "[unit][tcp_connection]") {
   net::TcpConnection conn{platform::Fd{-1}, fake_peer()};
 
   REQUIRE_THROWS_AS(conn.write("hello"), std::system_error);
 }
 
-TEST_CASE("TcpConnection write_all writes complete message") {
+TEST_CASE("TcpConnection write_all writes complete message", "[unit][tcp_connection]") {
   auto [client_fd, server_fd] = make_socket_pair();
 
   net::TcpConnection conn{std::move(server_fd), net::Endpoint{"127.0.0.1", 0}};
@@ -103,7 +103,7 @@ TEST_CASE("TcpConnection write_all writes complete message") {
   REQUIRE(std::string_view{buffer.data(), message.size()} == message);
 }
 
-TEST_CASE("TcpConnection write_all with empty data writes zero bytes") {
+TEST_CASE("TcpConnection write_all with empty data writes zero bytes", "[unit][tcp_connection]") {
   auto [client_fd, server_fd] = make_socket_pair();
 
   net::TcpConnection conn{std::move(server_fd), net::Endpoint{"127.0.0.1", 0}};

@@ -49,14 +49,14 @@ auto connected_client(const net::TcpListener& listener) -> platform::Fd {
 
 }  // namespace
 
-TEST_CASE("Constructor succeeds with valid localhost endpoint") {
+TEST_CASE("Constructor succeeds with valid localhost endpoint", "[unit][tcp_listener]") {
   net::Endpoint ep{"127.0.0.1", 0};
   net::TcpListener listener{ep};
 
   REQUIRE(listener.valid());
 }
 
-TEST_CASE("Invalid backlog throws") {
+TEST_CASE("Invalid backlog throws", "[unit][tcp_listener]") {
   net::Endpoint ep{"127.0.0.1", 0};
 
   REQUIRE_THROWS_AS(([&] { net::TcpListener listener{ep, 0}; }()), std::invalid_argument);
@@ -64,7 +64,7 @@ TEST_CASE("Invalid backlog throws") {
   REQUIRE_THROWS_AS(([&] { net::TcpListener listener{ep, -1}; }()), std::invalid_argument);
 }
 
-TEST_CASE("Invalid IPv4 address throws") {
+TEST_CASE("Invalid IPv4 address throws", "[unit][tcp_listener]") {
   net::Endpoint ep_1{"999.999.999.999", 0};
   net::Endpoint ep_2{"not an ip", 0};
   net::Endpoint ep_3{"localhost", 0};
@@ -77,7 +77,7 @@ TEST_CASE("Invalid IPv4 address throws") {
   REQUIRE_THROWS_AS([&] { net::TcpListener{ep_3}; }(), std::runtime_error);
 }
 
-TEST_CASE("Binding to the same port twice fails") {
+TEST_CASE("Binding to the same port twice fails", "[unit][tcp_listener]") {
   net::Endpoint ep{"127.0.0.1", 0};
   net::TcpListener listener_1{ep};
 
@@ -87,7 +87,7 @@ TEST_CASE("Binding to the same port twice fails") {
   REQUIRE_THROWS_AS(([&] { net::TcpListener listener_2{bound_ep}; }()), std::system_error);
 }
 
-TEST_CASE("Accept returns a usable TcpConnection") {
+TEST_CASE("Accept returns a usable TcpConnection", "[unit][tcp_listener]") {
   net::Endpoint ep{"127.0.0.1", 0};
   net::TcpListener listener{ep};
 
@@ -105,7 +105,7 @@ TEST_CASE("Accept returns a usable TcpConnection") {
   REQUIRE(std::string_view{response.data(), 1} == "x");
 }
 
-TEST_CASE("Accepted TcpConnection can communicate") {
+TEST_CASE("Accepted TcpConnection can communicate", "[unit][tcp_listener]") {
   net::Endpoint ep{"127.0.0.1", 0};
   net::TcpListener listener{ep};
 
@@ -133,7 +133,7 @@ TEST_CASE("Accepted TcpConnection can communicate") {
   REQUIRE(std::string_view{response.data(), 5} == "world");
 }
 
-TEST_CASE("Move behavior works indirectly") {
+TEST_CASE("Move behavior works indirectly", "[unit][tcp_listener]") {
   net::Endpoint ep{"127.0.0.1", 0};
   net::TcpListener init_listener{ep};
 
@@ -148,7 +148,7 @@ TEST_CASE("Move behavior works indirectly") {
   REQUIRE_FALSE(moved_listener.valid());
 }
 
-TEST_CASE("Not copy constructible") {
+TEST_CASE("Not copy constructible", "[unit][tcp_listener]") {
   static_assert(!std::is_copy_constructible_v<net::TcpListener>);
   static_assert(!std::is_copy_assignable_v<net::TcpListener>);
 }
