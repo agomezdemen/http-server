@@ -8,26 +8,29 @@
 #include <system_error>
 #include <utility>
 
-#include "../include/platform/fd.h"
-#include "../include/server/net/endpoint.h"
-#include "../include/server/net/tcp_connection.h"
+#include "server/net/endpoint.h"
+#include "server/net/tcp_connection.h"
+#include "server/platform/fd.h"
+
+namespace net = server::net;
+namespace platform = server::platform;
 
 namespace {
 
 // Socket pairs let connection tests exercise real send/recv behavior locally.
-auto make_socket_pair() -> std::pair<Fd, Fd> {
+auto make_socket_pair() -> std::pair<platform::Fd, platform::Fd> {
   int sockets[2]{-1, -1};
 
   if (::socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) == -1) {
     throw std::system_error{errno, std::generic_category(), "socketpair failed"};
   }
 
-  return {Fd{sockets[0]}, Fd{sockets[1]}};
+  return {platform::Fd{sockets[0]}, platform::Fd{sockets[1]}};
 }
 
-auto fake_peer() -> Endpoint {
+auto fake_peer() -> net::Endpoint {
   // TcpConnection stores peer metadata even when the socket pair is local.
-  return Endpoint{"127.0.0.1", 8080};
+  return net::Endpoint{"127.0.0.1", 8080};
 }
 
 }  // namespace
@@ -35,7 +38,7 @@ auto fake_peer() -> Endpoint {
 TEST_CASE("TcpConnection can read bytes sent by peer") {
   auto [conn_fd, peer_fd] = make_socket_pair();
 
-  TcpConnection conn{std::move(conn_fd), fake_peer()};
+  net::TcpConnection conn{std::move(conn_fd), fake_peer()};
 
   constexpr std::string_view msg{"hello"};
 
@@ -52,7 +55,7 @@ TEST_CASE("TcpConnection can read bytes sent by peer") {
 TEST_CASE("TcpConnection can write bytes to peer") {
   auto [conn_fd, peer_fd] = make_socket_pair();
 
-  TcpConnection conn{std::move(conn_fd), fake_peer()};
+  net::TcpConnection conn{std::move(conn_fd), fake_peer()};
 
   constexpr std::string_view msg{"hello from connection"};
 
@@ -69,7 +72,7 @@ TEST_CASE("TcpConnection can write bytes to peer") {
 }
 
 TEST_CASE("TcpConnection read returns 0 when peer closes connection") {
-  TcpConnection conn{Fd{-1}, fake_peer()};
+  net::TcpConnection conn{platform::Fd{-1}, fake_peer()};
 
   std::array<char, 16> buffer{};
 
@@ -77,7 +80,7 @@ TEST_CASE("TcpConnection read returns 0 when peer closes connection") {
 }
 
 TEST_CASE("TcpConnection write throws when fd is invalid") {
-  TcpConnection conn{Fd{-1}, fake_peer()};
+  net::TcpConnection conn{platform::Fd{-1}, fake_peer()};
 
   REQUIRE_THROWS_AS(conn.write("hello"), std::system_error);
 }
@@ -85,7 +88,7 @@ TEST_CASE("TcpConnection write throws when fd is invalid") {
 TEST_CASE("TcpConnection write_all writes complete message") {
   auto [client_fd, server_fd] = make_socket_pair();
 
-  TcpConnection conn{std::move(server_fd), Endpoint{"127.0.0.1", 0}};
+  net::TcpConnection conn{std::move(server_fd), net::Endpoint{"127.0.0.1", 0}};
 
   constexpr std::string_view message{"Hello from write_all"};
 
@@ -103,7 +106,7 @@ TEST_CASE("TcpConnection write_all writes complete message") {
 TEST_CASE("TcpConnection write_all with empty data writes zero bytes") {
   auto [client_fd, server_fd] = make_socket_pair();
 
-  TcpConnection conn{std::move(server_fd), Endpoint{"127.0.0.1", 0}};
+  net::TcpConnection conn{std::move(server_fd), net::Endpoint{"127.0.0.1", 0}};
 
   REQUIRE(conn.write_all("") == 0);
 }

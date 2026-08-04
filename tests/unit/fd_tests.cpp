@@ -6,7 +6,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "../include/platform/fd.h"
+#include "server/platform/fd.h"
+
+namespace platform = server::platform;
 
 namespace {
 
@@ -42,7 +44,7 @@ bool fd_is_open(int fd) { return !fd_is_closed(fd); }
 }  // namespace
 
 TEST_CASE("Default constructed Fd is invalid") {
-  Fd fd{};
+  platform::Fd fd{};
 
   REQUIRE_FALSE(fd.valid());
   REQUIRE(fd.get() == -1);
@@ -52,7 +54,7 @@ TEST_CASE("Fd constructed from raw fd owns the fd") {
   const auto pipe = make_pipe();
 
   {
-    Fd fd{pipe.read_end};
+    platform::Fd fd{pipe.read_end};
 
     REQUIRE(fd.valid());
     REQUIRE(fd.get() == pipe.read_end);
@@ -70,7 +72,7 @@ TEST_CASE("Fd destructor closes owned fd") {
   const int raw_fd = pipe.read_end;
 
   {
-    Fd fd{raw_fd};
+    platform::Fd fd{raw_fd};
 
     REQUIRE(fd.valid());
     REQUIRE(fd_is_open(raw_fd));
@@ -83,7 +85,7 @@ TEST_CASE("Fd destructor closes owned fd") {
 TEST_CASE("Fd release returns fd and invalidates wrapper without closing fd") {
   const auto pipe = make_pipe();
 
-  Fd fd{pipe.read_end};
+  platform::Fd fd{pipe.read_end};
 
   const int released_fd = fd.release();
 
@@ -101,8 +103,8 @@ TEST_CASE("Fd move constructor transfers ownership") {
   const auto pipe = make_pipe();
   const int raw_fd = pipe.read_end;
 
-  Fd original{raw_fd};
-  Fd moved{std::move(original)};
+  platform::Fd original{raw_fd};
+  platform::Fd moved{std::move(original)};
 
   REQUIRE_FALSE(original.valid());
   REQUIRE(original.get() == -1);
@@ -118,8 +120,8 @@ TEST_CASE("Fd move assignment transfers ownership") {
   const auto pipe = make_pipe();
   const int raw_fd = pipe.read_end;
 
-  Fd source{raw_fd};
-  Fd destination{};
+  platform::Fd source{raw_fd};
+  platform::Fd destination{};
 
   destination = std::move(source);
 
@@ -140,8 +142,8 @@ TEST_CASE("Fd move assignment closes destination's old fd") {
   const int old_fd = old_pipe.read_end;
   const int new_fd = new_pipe.read_end;
 
-  Fd destination{old_fd};
-  Fd source{new_fd};
+  platform::Fd destination{old_fd};
+  platform::Fd source{new_fd};
 
   destination = std::move(source);
 
@@ -163,7 +165,7 @@ TEST_CASE("Fd self move assignment does not break ownership") {
   const auto pipe = make_pipe();
   const int raw_fd = pipe.read_end;
 
-  Fd fd{raw_fd};
+  platform::Fd fd{raw_fd};
 
   fd = std::move(fd);
 
@@ -175,12 +177,12 @@ TEST_CASE("Fd self move assignment does not break ownership") {
 }
 
 TEST_CASE("Fd has correct copy and move properties") {
-  static_assert(!std::is_copy_constructible_v<Fd>);
-  static_assert(!std::is_copy_assignable_v<Fd>);
+  static_assert(!std::is_copy_constructible_v<platform::Fd>);
+  static_assert(!std::is_copy_assignable_v<platform::Fd>);
 
-  static_assert(std::is_move_constructible_v<Fd>);
-  static_assert(std::is_move_assignable_v<Fd>);
+  static_assert(std::is_move_constructible_v<platform::Fd>);
+  static_assert(std::is_move_assignable_v<platform::Fd>);
 
-  static_assert(std::is_nothrow_move_constructible_v<Fd>);
-  static_assert(std::is_nothrow_move_assignable_v<Fd>);
+  static_assert(std::is_nothrow_move_constructible_v<platform::Fd>);
+  static_assert(std::is_nothrow_move_assignable_v<platform::Fd>);
 }

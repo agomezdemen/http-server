@@ -1,20 +1,37 @@
 #include <array>
+#include <charconv>
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <system_error>
 
-#include "../include/server/http/parser.h"
-#include "../include/server/http/response.h"
-#include "../include/server/net/endpoint.h"
-#include "../include/server/net/tcp_connection.h"
-#include "../include/server/net/tcp_listener.h"
+#include "server/http/parser.h"
+#include "server/http/response.h"
+#include "server/net/endpoint.h"
+#include "server/net/tcp_connection.h"
+#include "server/net/tcp_listener.h"
 
 namespace http = server::http;
+namespace net = server::net;
 
-auto main() -> int {
+auto main(int argc, char* argv[]) -> int {
+  if(argc != 2)
+    return 1;
+
+  const std::string_view port_string{argv[1]};
+  std::uint16_t port{};
+
+  const auto [ptr, ec]{std::from_chars(port_string.data(),
+                                      port_string.data() + port_string.size(),
+                                      port)};
+
+  if(ec != std::errc{} || ptr != port_string.data() + port_string.size() || port == 0)
+    return 1;
+
   try {
-    Endpoint ep{"127.0.0.1", 8080};
-    TcpListener listener{ep};
+    net::Endpoint ep{"127.0.0.1", port};
+    net::TcpListener listener{ep};
 
     std::cout << "Listening on " << ep.to_string() << '\n';
 
@@ -65,6 +82,4 @@ auto main() -> int {
     std::cerr << "error: " << e.what() << '\n';
     return 1;
   }
-
-  return 0;
 }

@@ -4,17 +4,19 @@
 #include <span>
 #include <string_view>
 
-#include "../../platform/fd.h"
-#include "endpoint.h"
+#include "server/net/endpoint.h"
+#include "server/platform/fd.h"
+
+namespace server::net {
 
 // Owns one accepted stream socket and exposes blocking read/write operations.
 class TcpConnection {
  private:
   Endpoint peer_;  // Connected peer address.
-  Fd cfd_;         // Connected socket descriptor.
+  platform::Fd cfd_;         // Connected socket descriptor.
 
  public:
-  TcpConnection(Fd cfd, Endpoint peer);
+  TcpConnection(platform::Fd cfd, Endpoint peer);
 
   TcpConnection(const TcpConnection&) = delete;
   auto operator=(const TcpConnection&) -> TcpConnection& = delete;
@@ -32,5 +34,7 @@ class TcpConnection {
   auto peer_endpoint() const noexcept -> const Endpoint&;
   auto valid() const noexcept -> bool;
 };
+
+}  // namespace server::net
 
 #endif  // !TCP_CONNECTION_H

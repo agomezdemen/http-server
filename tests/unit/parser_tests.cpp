@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <string_view>
 
-#include "../include/server/http/parser.h"
+#include "server/http/parser.h"
 
 using server::http::ParseStatus;
 using server::http::RequestParser;

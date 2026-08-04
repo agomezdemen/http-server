@@ -13,10 +13,13 @@
 #include <type_traits>
 #include <utility>
 
-#include "../include/platform/fd.h"
-#include "../include/server/net/endpoint.h"
-#include "../include/server/net/tcp_connection.h"
-#include "../include/server/net/tcp_listener.h"
+#include "server/net/endpoint.h"
+#include "server/net/tcp_connection.h"
+#include "server/net/tcp_listener.h"
+#include "server/platform/fd.h"
+
+namespace net = server::net;
+namespace platform = server::platform;
 
 namespace {
 
@@ -31,9 +34,9 @@ auto loopback_addr(unsigned short port) -> sockaddr_in {
   return addr;
 }
 
-auto connected_client(const TcpListener& listener) -> Fd {
+auto connected_client(const net::TcpListener& listener) -> platform::Fd {
   // Connect a real client socket so listener.accept() can return immediately.
-  Fd client_fd{::socket(AF_INET, SOCK_STREAM, 0)};
+  platform::Fd client_fd{::socket(AF_INET, SOCK_STREAM, 0)};
   REQUIRE(client_fd.valid());
 
   const sockaddr_in addr{loopback_addr(listener.bound_port())};
@@ -47,50 +50,50 @@ auto connected_client(const TcpListener& listener) -> Fd {
 }  // namespace
 
 TEST_CASE("Constructor succeeds with valid localhost endpoint") {
-  Endpoint ep{"127.0.0.1", 0};
-  TcpListener listener{ep};
+  net::Endpoint ep{"127.0.0.1", 0};
+  net::TcpListener listener{ep};
 
   REQUIRE(listener.valid());
 }
 
 TEST_CASE("Invalid backlog throws") {
-  Endpoint ep{"127.0.0.1", 0};
+  net::Endpoint ep{"127.0.0.1", 0};
 
-  REQUIRE_THROWS_AS(([&] { TcpListener listener{ep, 0}; }()), std::invalid_argument);
+  REQUIRE_THROWS_AS(([&] { net::TcpListener listener{ep, 0}; }()), std::invalid_argument);
 
-  REQUIRE_THROWS_AS(([&] { TcpListener listener{ep, -1}; }()), std::invalid_argument);
+  REQUIRE_THROWS_AS(([&] { net::TcpListener listener{ep, -1}; }()), std::invalid_argument);
 }
 
 TEST_CASE("Invalid IPv4 address throws") {
-  Endpoint ep_1{"999.999.999.999", 0};
-  Endpoint ep_2{"not an ip", 0};
-  Endpoint ep_3{"localhost", 0};
+  net::Endpoint ep_1{"999.999.999.999", 0};
+  net::Endpoint ep_2{"not an ip", 0};
+  net::Endpoint ep_3{"localhost", 0};
 
   // Host names are not resolved yet; the listener only accepts IPv4 literals.
-  REQUIRE_THROWS_AS([&] { TcpListener{ep_1}; }(), std::runtime_error);
+  REQUIRE_THROWS_AS([&] { net::TcpListener{ep_1}; }(), std::runtime_error);
 
-  REQUIRE_THROWS_AS([&] { TcpListener{ep_2}; }(), std::runtime_error);
+  REQUIRE_THROWS_AS([&] { net::TcpListener{ep_2}; }(), std::runtime_error);
 
-  REQUIRE_THROWS_AS([&] { TcpListener{ep_3}; }(), std::runtime_error);
+  REQUIRE_THROWS_AS([&] { net::TcpListener{ep_3}; }(), std::runtime_error);
 }
 
 TEST_CASE("Binding to the same port twice fails") {
-  Endpoint ep{"127.0.0.1", 0};
-  TcpListener listener_1{ep};
+  net::Endpoint ep{"127.0.0.1", 0};
+  net::TcpListener listener_1{ep};
 
   // Use the real port chosen for listener_1, since port 0 means "pick one".
-  Endpoint bound_ep{"127.0.0.1", listener_1.bound_port()};
+  net::Endpoint bound_ep{"127.0.0.1", listener_1.bound_port()};
 
-  REQUIRE_THROWS_AS(([&] { TcpListener listener_2{bound_ep}; }()), std::system_error);
+  REQUIRE_THROWS_AS(([&] { net::TcpListener listener_2{bound_ep}; }()), std::system_error);
 }
 
 TEST_CASE("Accept returns a usable TcpConnection") {
-  Endpoint ep{"127.0.0.1", 0};
-  TcpListener listener{ep};
+  net::Endpoint ep{"127.0.0.1", 0};
+  net::TcpListener listener{ep};
 
-  Fd client_fd{connected_client(listener)};
+  platform::Fd client_fd{connected_client(listener)};
 
-  TcpConnection accepted_conn{listener.accept()};
+  net::TcpConnection accepted_conn{listener.accept()};
 
   const auto bytes_written{accepted_conn.write("x")};
   REQUIRE(bytes_written == 1);
@@ -103,12 +106,12 @@ TEST_CASE("Accept returns a usable TcpConnection") {
 }
 
 TEST_CASE("Accepted TcpConnection can communicate") {
-  Endpoint ep{"127.0.0.1", 0};
-  TcpListener listener{ep};
+  net::Endpoint ep{"127.0.0.1", 0};
+  net::TcpListener listener{ep};
 
-  Fd client_fd{connected_client(listener)};
+  platform::Fd client_fd{connected_client(listener)};
 
-  TcpConnection accepted_conn{listener.accept()};
+  net::TcpConnection accepted_conn{listener.accept()};
 
   // Client -> accepted connection
   REQUIRE(::write(client_fd.get(), "hello", 5) == 5);
@@ -131,10 +134,10 @@ TEST_CASE("Accepted TcpConnection can communicate") {
 }
 
 TEST_CASE("Move behavior works indirectly") {
-  Endpoint ep{"127.0.0.1", 0};
-  TcpListener init_listener{ep};
+  net::Endpoint ep{"127.0.0.1", 0};
+  net::TcpListener init_listener{ep};
 
-  TcpListener moved_listener{std::move(init_listener)};
+  net::TcpListener moved_listener{std::move(init_listener)};
 
   REQUIRE_FALSE(init_listener.valid());
   REQUIRE(moved_listener.valid());
@@ -146,6 +149,6 @@ TEST_CASE("Move behavior works indirectly") {
 }
 
 TEST_CASE("Not copy constructible") {
-  static_assert(!std::is_copy_constructible_v<TcpListener>);
-  static_assert(!std::is_copy_assignable_v<TcpListener>);
+  static_assert(!std::is_copy_constructible_v<net::TcpListener>);
+  static_assert(!std::is_copy_assignable_v<net::TcpListener>);
 }

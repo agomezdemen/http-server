@@ -1,5 +1,5 @@
-#include "../../include/server/http/request.h"
-#include "../../include/server/http/http_types.h"
+#include "server/http/request.h"
+#include "server/http/http_types.h"
 
 #include <vector>
 #include <span>

@@ -3,8 +3,8 @@
 #include <string>
 #include <string_view>
 
-#include "../include/server/http/http_types.h"
-#include "../include/server/http/response.h"
+#include "server/http/http_types.h"
+#include "server/http/response.h"
 
 namespace http = server::http;
 

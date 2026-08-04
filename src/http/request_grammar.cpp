@@ -1,10 +1,10 @@
-#include "../../include/server/http/request_grammar.h"
+#include "server/http/request_grammar.h"
 
 #include <algorithm>
 #include <expected>
 #include <string>
 #include <string_view>
-#include "../../include/server/http/http_types.h"
+#include "server/http/http_types.h"
 
 namespace server::http {
  

@@ -8,7 +8,7 @@ function(http_server_add_catch_test target_name)
 
     target_link_libraries(${target_name}
         PRIVATE
-            http::server_core
+            server_core
             Catch2::Catch2WithMain
     )
 endfunction()

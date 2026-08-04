@@ -1,8 +1,8 @@
 #ifndef FD_H
 #define FD_H
 
-// Owns one POSIX file descriptor and closes it when the wrapper goes away.
-// The handle is movable, but not copyable, so ownership stays clear.
+namespace server::platform {
+
 class Fd {
  private:
   int fd_;
@@ -25,5 +25,7 @@ class Fd {
   // Gives the raw descriptor back to the caller without closing it.
   auto release() noexcept -> int;
 };
+
+}  // namespace server::platform
 
 #endif

@@ -1,6 +1,8 @@
-#include "../../include/platform/fd.h"
+#include "server/platform/fd.h"
 
 #include <unistd.h>
+
+namespace server::platform {
 
 Fd::Fd() noexcept : fd_{-1} {}
 
@@ -39,3 +41,5 @@ auto Fd::release() noexcept -> int {
   fd_ = -1;
   return fd_copy;
 }
+
+}  // namespace server::platform

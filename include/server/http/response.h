@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "http_types.h"
+#include "server/http/http_types.h"
 
 namespace server::http {
 // Builds an HTTP response and serializes it into bytes for the socket layer.

@@ -1,15 +1,17 @@
 #ifndef TCP_LISTENER_H
 #define TCP_LISTENER_H
-#include "../../platform/fd.h"
-#include "endpoint.h"
-#include "tcp_connection.h"
+#include "server/net/endpoint.h"
+#include "server/net/tcp_connection.h"
+#include "server/platform/fd.h"
+
+namespace server::net {
 
 // Owns a listening TCP socket for one endpoint.
 // Accepted clients are returned as Fd objects so ownership stays explicit.
 class TcpListener {
  private:
   Endpoint ep_;
-  Fd sfd_;
+  platform::Fd sfd_;
 
  public:
   explicit TcpListener(Endpoint ep, int backlog = 128);
@@ -29,5 +31,7 @@ class TcpListener {
 
   auto valid() const noexcept -> bool;
 };
+
+}  // namespace server::net
 
 #endif  // !TCP_LISTENER

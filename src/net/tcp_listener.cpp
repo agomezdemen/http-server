@@ -1,4 +1,4 @@
-#include "../../include/server/net/tcp_listener.h"
+#include "server/net/tcp_listener.h"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -10,6 +10,8 @@
 #include <string>
 #include <system_error>
 #include <utility>
+
+namespace server::net {
 
 TcpListener::TcpListener(Endpoint ep, int backlog)
     : ep_{std::move(ep)}, sfd_{::socket(AF_INET, SOCK_STREAM, 0)} {
@@ -71,7 +73,7 @@ auto TcpListener::accept() -> TcpConnection {
     throw std::system_error{err, std::generic_category(), "accept failed"};
   }
 
-  Fd client_fd{raw_client_fd};
+  platform::Fd client_fd{raw_client_fd};
 
   char ip_buffer[INET_ADDRSTRLEN]{};
 
@@ -83,7 +85,7 @@ auto TcpListener::accept() -> TcpConnection {
 
   Endpoint peer{std::string{ip_buffer}, ntohs(client_addr.sin_port)};
 
-  return TcpConnection{Fd{std::move(client_fd)}, std::move(peer)};
+  return TcpConnection{platform::Fd{std::move(client_fd)}, std::move(peer)};
 }
 
 auto TcpListener::fd() const noexcept -> int { return sfd_.get(); }
@@ -104,3 +106,5 @@ auto TcpListener::bound_port() const -> unsigned short {
 }
 
 auto TcpListener::valid() const noexcept -> bool { return sfd_.valid(); }
+
+}  // namespace server::net

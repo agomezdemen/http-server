@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <string>
 
+namespace server::net {
+
 // Stores the address the server should bind or connect to.
 // Host is kept as text so parsing can happen at the socket boundary.
 class Endpoint {
@@ -18,5 +20,7 @@ class Endpoint {
   uint16_t port() const noexcept;
   std::string to_string() const;
 };
+
+}  // namespace server::net
 
 #endif  // !ENDPOINT_H

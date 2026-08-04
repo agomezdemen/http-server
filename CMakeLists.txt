@@ -18,7 +18,7 @@ include(cmake/Sanitizers.cmake)
 
 # Core server code lives in a library so the app, tests, and future benchmarks
 # can all link the same implementation.
-add_library(http_server_core
+add_library(server_core
     src/platform/fd.cpp
     src/net/endpoint.cpp
     src/net/tcp_listener.cpp
@@ -30,21 +30,19 @@ add_library(http_server_core
     src/http/request_grammar.cpp
 )
 
-add_library(http::server_core ALIAS http_server_core)
+target_compile_features(server_core PUBLIC cxx_std_23)
 
-target_compile_features(http_server_core PUBLIC cxx_std_23)
-
-set_target_properties(http_server_core PROPERTIES
+set_target_properties(server_core PROPERTIES
     CXX_EXTENSIONS OFF
 )
 
-target_include_directories(http_server_core
+target_include_directories(server_core
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include
 )
 
-http_server_set_project_warnings(http_server_core)
-http_server_enable_sanitizers(http_server_core)
+http_server_set_project_warnings(server_core)
+http_server_enable_sanitizers(server_core)
 
 if(HTTP_ENABLE_LTO)
     # LTO support depends on the compiler and linker, so check before enabling it.
@@ -52,7 +50,7 @@ if(HTTP_ENABLE_LTO)
     check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
 
     if(ipo_supported)
-        set_property(TARGET http_server_core PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+        set_property(TARGET server_core PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
     else()
         message(WARNING "IPO/LTO not supported: ${ipo_error}")
     endif()
@@ -64,12 +62,12 @@ add_executable(http_server
 
 target_link_libraries(http_server
     PRIVATE
-        http::server_core
+        server_core
 )
 
 if(HTTP_BUILD_TESTS)
     enable_testing()
-    add_subdirectory(tests)
+    add_subdirectory(tests/unit)
 endif()
 
 # Benchmarks are kept out of normal builds until the benchmark targets exist.

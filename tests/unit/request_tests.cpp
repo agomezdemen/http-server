@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "../include/server/http/request.h"
-#include "../include/server/http/http_types.h"
+#include "server/http/http_types.h"
+#include "server/http/request.h"
 
 namespace http = server::http;
 

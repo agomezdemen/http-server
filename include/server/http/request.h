@@ -6,7 +6,7 @@
 #include <vector>
 #include <span>
 
-#include "http_types.h"
+#include "server/http/http_types.h"
 
 namespace server::http {
 // Stores the structured pieces of an HTTP request once parsing is complete.

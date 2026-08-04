@@ -1,11 +1,15 @@
-#include "../../include/server/net/tcp_connection.h"
+#include "server/net/tcp_connection.h"
 
 #include <sys/socket.h>
 
 #include <cerrno>
+#include <stdexcept>
 #include <system_error>
+#include <utility>
 
-TcpConnection::TcpConnection(Fd cfd, Endpoint peer)
+namespace server::net {
+
+TcpConnection::TcpConnection(platform::Fd cfd, Endpoint peer)
     : peer_{std::move(peer)}, cfd_{std::move(cfd)} {}
 
 auto TcpConnection::read(std::span<char> buffer) -> std::size_t {
@@ -60,3 +64,5 @@ auto TcpConnection::fd() const noexcept -> int { return cfd_.get(); }
 auto TcpConnection::peer_endpoint() const noexcept -> const Endpoint& { return peer_; }
 
 auto TcpConnection::valid() const noexcept -> bool { return cfd_.valid(); }
+
+}  // namespace server::net
