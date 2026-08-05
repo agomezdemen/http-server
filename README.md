@@ -1,6 +1,6 @@
 # Modern C++ HTTP Server
 
-[![CI](https://github.com/<OWNER>/<REPOSITORY>/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/<REPOSITORY>/actions/workflows/ci.yml)
+[![CI](https://github.com/agomezdemen/http-server/actions/workflows/ci.yml/badge.svg)](https://github.com/agomezdemen/http-server/actions/workflows/ci.yml)
 
 A from-scratch HTTP/1.1 server written in modern C++23 for Linux.
 
