@@ -67,7 +67,12 @@ target_link_libraries(http_server
 
 if(HTTP_BUILD_TESTS)
     enable_testing()
+
+    find_package(Catch2 3 REQUIRED)
+    include(Catch)
+
     add_subdirectory(tests/unit)
+    add_subdirectory(tests/integration)
 endif()
 
 # Benchmarks are kept out of normal builds until the benchmark targets exist.

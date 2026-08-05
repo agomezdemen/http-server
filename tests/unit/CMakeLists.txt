@@ -1,5 +1,3 @@
-find_package(Catch2 3 REQUIRED)
-
 # All test executables link the server core and use Catch2's generated main.
 function(http_server_add_catch_test target_name)
     add_executable(${target_name}
@@ -21,8 +19,6 @@ http_server_add_catch_test(response_tests response_tests.cpp)
 http_server_add_catch_test(request_tests request_tests.cpp)
 http_server_add_catch_test(grammar_tests grammar_tests.cpp)
 http_server_add_catch_test(parser_tests parser_tests.cpp)
-
-include(Catch)
 
 # Discover Catch2 test cases at test time, after the executables have been built.
 catch_discover_tests(fd_tests
