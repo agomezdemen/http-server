@@ -19,6 +19,7 @@ http_server_add_catch_test(response_tests response_tests.cpp)
 http_server_add_catch_test(request_tests request_tests.cpp)
 http_server_add_catch_test(grammar_tests grammar_tests.cpp)
 http_server_add_catch_test(parser_tests parser_tests.cpp)
+http_server_add_catch_test(router_tests router_tests.cpp)
 
 # Discover Catch2 test cases at test time, after the executables have been built.
 catch_discover_tests(fd_tests
@@ -46,5 +47,9 @@ catch_discover_tests(grammar_tests
 )
 
 catch_discover_tests(parser_tests
+  DISCOVERY_MODE PRE_TEST
+)
+
+catch_discover_tests(router_tests
   DISCOVERY_MODE PRE_TEST
 )

@@ -28,6 +28,7 @@ add_library(server_core
     src/http/response.cpp
     src/http/parser.cpp
     src/http/request_grammar.cpp
+    src/http/router.cpp
 )
 
 target_compile_features(server_core PUBLIC cxx_std_23)
