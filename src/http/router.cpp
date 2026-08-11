@@ -8,7 +8,7 @@ namespace server::http {
   }
 
   auto Router::route(const Request& request) const -> std::optional<Response> {
-    RouteKey key{request.get_method(), std::string{request.get_target()}};
+    RouteKey key{request.get_method(), std::string{request.get_path()}};
 
     const auto route_it{routes_.find(key)};
 

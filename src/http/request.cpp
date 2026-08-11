@@ -49,6 +49,21 @@ namespace server::http {
     return request_line_.target;
   }
 
+  auto Request::get_path() const noexcept -> std::string_view {
+    const auto query_pos{request_line_.target.find('?')};
+
+    return std::string_view{request_line_.target}.substr(0, query_pos);
+  }
+
+  auto Request::get_query() const noexcept -> std::string_view {
+    const auto query_pos{request_line_.target.find('?')};
+
+    if(query_pos == std::string::npos)
+      return {};
+
+    return std::string_view{request_line_.target}.substr(query_pos + 1);
+  }
+
   auto Request::get_body() const noexcept -> std::string_view {
     return body_;
   }

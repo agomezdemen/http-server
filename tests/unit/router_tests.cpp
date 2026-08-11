@@ -166,3 +166,30 @@ TEST_CASE("Handler receives the original request", "[unit][router]") {
   REQUIRE(response.has_value());
   REQUIRE(received_request == &request);
 }
+
+TEST_CASE("Request returns query string", "[unit][request]") {
+  http::Request request{http::Method::get, "/search?q=test", http::Version::http_1_1};
+
+  REQUIRE(request.get_query() == "q=test");
+}
+
+TEST_CASE("Request returns empty query when target has no query string", "[unit][request]") {
+  http::Request request{http::Method::get, "/search", http::Version::http_1_1};
+
+  REQUIRE(request.get_query().empty());
+}
+
+TEST_CASE("Router ignores query string when matching path", "[unit][router]") {
+  http::Router router;
+
+  REQUIRE(router.add_route(http::Method::get, "/search",
+        [](const http::Request&) -> http::Response {
+          return http::Response{http::Status::ok, http::Version::http_1_1};
+        }));
+
+  http::Request request{http::Method::get, "/search?q=test", http::Version::http_1_1};
+
+  const auto response{router.route(request)};
+
+  REQUIRE(response.has_value());
+}

@@ -80,4 +80,28 @@ TEST_CASE("Request can store a body", "[unit][request]") {
   const auto body{request.get_body()};
 
   REQUIRE(body == R"({"name":"John"})");
-} 
+}
+
+TEST_CASE("Request path excludes query string", "[unit][request]") {
+  http::Request request{http::Method::get, "/search?q=test", http::Version::http_1_1};
+
+  REQUIRE(request.get_path() == "/search");
+}
+
+TEST_CASE("Request path is full target when no query exists", "[unit][request]") {
+  http::Request request{http::Method::get, "/health", http::Version::http_1_1};
+
+  REQUIRE(request.get_path() == "/health");
+}
+
+TEST_CASE("Request returns query string", "[unit][request]") {
+  http::Request request{http::Method::get, "/search?q=test&page=2", http::Version::http_1_1};
+
+  REQUIRE(request.get_query() == "q=test&page=2");
+}
+
+TEST_CASE("Request returns empty query when target has no query string", "[unit][request]") {
+  http::Request request{http::Method::get, "/search", http::Version::http_1_1};
+
+  REQUIRE(request.get_query().empty());
+}

@@ -25,6 +25,8 @@ class Request {
   auto set_body(std::string body) -> void;
   [[nodiscard]] auto get_headers() const noexcept -> std::span<const Header>;
   [[nodiscard]] auto get_target() const noexcept -> std::string_view;
+  [[nodiscard]] auto get_path() const noexcept -> std::string_view;
+  [[nodiscard]] auto get_query() const noexcept -> std::string_view;
   [[nodiscard]] auto get_body() const noexcept -> std::string_view;
   [[nodiscard]] auto get_method() const noexcept -> Method;
   [[nodiscard]] auto get_version() const noexcept -> Version;
