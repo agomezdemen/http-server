@@ -72,3 +72,57 @@ TEST_CASE("server responds with bad request to malformed HTTP", "[integration][s
   REQUIRE(response.find("Content-Length: 11\r\n") != std::string::npos);
   REQUIRE(response.ends_with("\r\n\r\nBad Request"));
 }
+
+TEST_CASE("integration: server routes GET health", "[integration][server][router]") {
+  constexpr std::uint16_t port{18080};
+
+  ServerProcess server{HTTP_SERVER_EXECUTABLE, port};
+
+  REQUIRE(server.wait_until_ready(std::chrono::seconds{1}));
+
+  HttpClient client{"127.0.0.1", port};
+
+  const auto response{client.send_request("GET /health HTTP/1.1\r\nHost: localhost\r\n\r\n")};
+
+  REQUIRE(response ==
+          "HTTP/1.1 200 OK\r\n"
+          "Content-Length: 2\r\n"
+          "\r\n"
+          "OK");
+}
+
+TEST_CASE("integration: server ignores query string when routing", "[integration][server][router]") {
+  constexpr std::uint16_t port{18080};
+
+  ServerProcess server{HTTP_SERVER_EXECUTABLE, port};
+
+  REQUIRE(server.wait_until_ready(std::chrono::seconds{1}));
+
+  HttpClient client{"127.0.0.1", port};
+
+  const auto response{client.send_request("GET /health?foo=bar HTTP/1.1\r\nHost: localhost\r\n\r\n")};
+
+  REQUIRE(response ==
+          "HTTP/1.1 200 OK\r\n"
+          "Content-Length: 2\r\n"
+          "\r\n"
+          "OK");
+}
+
+TEST_CASE("integration: server returns not found for unknown route", "[integration][server][router]") {
+  constexpr std::uint16_t port{18080};
+
+  ServerProcess server{HTTP_SERVER_EXECUTABLE, port};
+
+  REQUIRE(server.wait_until_ready(std::chrono::seconds{1}));
+
+  HttpClient client{"127.0.0.1", port};
+
+  const auto response{client.send_request("GET /missing HTTP/1.1\r\nHost: localhost\r\n\r\n")};
+
+  REQUIRE(response ==
+          "HTTP/1.1 404 Not Found\r\n"
+          "Content-Length: 9\r\n"
+          "\r\n"
+          "Not Found");
+}
