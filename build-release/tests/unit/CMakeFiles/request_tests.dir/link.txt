@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/request_tests.dir/link.d CMakeFiles/request_tests.dir/request_tests.cpp.o -o request_tests  ../../libserver_core.a /usr/lib/libCatch2Main.a /usr/lib/libCatch2.a

@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/router_tests.dir/link.d CMakeFiles/router_tests.dir/router_tests.cpp.o -o router_tests  ../../libserver_core.a /usr/lib/libCatch2Main.a /usr/lib/libCatch2.a

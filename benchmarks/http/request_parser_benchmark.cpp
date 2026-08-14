@@ -6,7 +6,18 @@
 #include <chrono>
 
 namespace benchmark {
-  RequestParserBenchmark::RequestParserBenchmark(ReqParserBenchCase bench_case, std::size_t iterations) : Benchmark{iterations}, bench_case_{bench_case}, parser_{} {}
+  auto RequestParserBenchmark::measure_reset_cost() -> std::chrono::nanoseconds {
+    const auto start{std::chrono::steady_clock::now()};
+
+    for(auto i{0uz}; i < iterations_; ++i)
+        parser_.reset();
+
+    const auto end{std::chrono::steady_clock::now()};
+
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+  }
+
+  RequestParserBenchmark::RequestParserBenchmark(ReqParserBenchCase bench_case, std::size_t iterations) : Benchmark{iterations}, bench_case_{bench_case}, parser_{}, reset_time_{measure_reset_cost()} {}
 
   auto RequestParserBenchmark::lifecycle() -> BenchmarkCaseResult {
     std::chrono::nanoseconds total{};

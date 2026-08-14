@@ -1,2 +1,0 @@
-/usr/bin/ar qc libserver_core.a CMakeFiles/server_core.dir/src/platform/fd.cpp.o CMakeFiles/server_core.dir/src/net/endpoint.cpp.o CMakeFiles/server_core.dir/src/net/tcp_listener.cpp.o CMakeFiles/server_core.dir/src/net/tcp_connection.cpp.o CMakeFiles/server_core.dir/src/http/request.cpp.o CMakeFiles/server_core.dir/src/http/response.cpp.o CMakeFiles/server_core.dir/src/http/parser.cpp.o CMakeFiles/server_core.dir/src/http/request_grammar.cpp.o CMakeFiles/server_core.dir/src/http/router.cpp.o
-/usr/bin/ranlib libserver_core.a

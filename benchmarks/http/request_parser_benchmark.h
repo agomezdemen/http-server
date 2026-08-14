@@ -5,6 +5,7 @@
 #include "core/benchmark_result.h"
 #include "server/http/parser.h"
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
@@ -48,7 +49,10 @@ namespace benchmark {
     };
 
     ReqParserBenchCase bench_case_;
-    server::http::RequestParser parser_; 
+    server::http::RequestParser parser_;
+    std::chrono::nanoseconds reset_time_;
+
+    auto measure_reset_cost() -> std::chrono::nanoseconds;
 
     auto lifecycle() -> BenchmarkCaseResult;
     auto complete_request() -> BenchmarkCaseResult;
