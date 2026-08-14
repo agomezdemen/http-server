@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/parser_tests.dir/link.d CMakeFiles/parser_tests.dir/parser_tests.cpp.o -o parser_tests  ../../libserver_core.a /usr/lib/libCatch2Main.a /usr/lib/libCatch2.a

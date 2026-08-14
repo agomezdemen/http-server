@@ -11,13 +11,13 @@ namespace server::net {
 class Endpoint {
  private:
   std::string host_;
-  uint16_t port_;
+  std::uint16_t port_;
 
  public:
   Endpoint() = delete;
   Endpoint(std::string host, std::uint16_t port);
   const std::string& host() const noexcept;
-  uint16_t port() const noexcept;
+  std::uint16_t port() const noexcept;
   std::string to_string() const;
 };
 

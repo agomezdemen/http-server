@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/tcp_listener_tests.dir/link.d CMakeFiles/tcp_listener_tests.dir/tcp_listener_tests.cpp.o -o tcp_listener_tests  ../../libserver_core.a /usr/lib/libCatch2Main.a /usr/lib/libCatch2.a
