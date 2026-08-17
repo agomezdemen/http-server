@@ -20,127 +20,136 @@ namespace benchmark {
   RequestParserBenchmark::RequestParserBenchmark(ReqParserBenchCase bench_case, std::size_t iterations) : Benchmark{iterations}, bench_case_{bench_case}, parser_{}, reset_time_{measure_reset_cost()} {}
 
   auto RequestParserBenchmark::lifecycle() -> BenchmarkCaseResult {
-    std::chrono::nanoseconds total{};
+    const auto start{std::chrono::steady_clock::now()};
 
     for(auto i{0uz}; i < iterations_; ++i) {
-      const auto start{std::chrono::steady_clock::now()};
-      {
-        server::http::RequestParser parser{};
-        parser.consume(complete_request_);
-        parser.reset();
-      }
-      const auto end{std::chrono::steady_clock::now()};
-      
-      total += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+      server::http::RequestParser parser{};
+      (void)parser.consume(complete_request_);
+      parser.reset();
     }
 
-    return BenchmarkCaseResult{
-      .name = "lifecycle",
-      .iterations = iterations_,
-      .total_time = total
-    };
+    const auto end{std::chrono::steady_clock::now()};  
+
+    const auto total{std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)};
+
+    BenchmarkCaseResult result{};
+
+    result.name = "lifecycle";
+    result.iterations = iterations_;
+    result.total_time = total;
+
+    return result;
   }
 
   auto RequestParserBenchmark::complete_request() -> BenchmarkCaseResult {
-    std::chrono::nanoseconds total{};
+    const auto start{std::chrono::steady_clock::now()};
 
     for(auto i{0uz}; i < iterations_; ++i) {
       parser_.reset();
-
-      const auto start{std::chrono::steady_clock::now()};
-      parser_.consume(complete_request_);
-      const auto end{std::chrono::steady_clock::now()};
-
-      total += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+      (void)parser_.consume(complete_request_);
     }
+
+    const auto end{std::chrono::steady_clock::now()};
     
-    return BenchmarkCaseResult{
-      .name = "complete_request",
-      .iterations = iterations_,
-      .total_time = total
-    };
+    const auto total{std::chrono::duration_cast<std::chrono::nanoseconds>(end - start) - reset_time_};
+
+    BenchmarkCaseResult result{};
+
+    result.name = "complete_request";
+    result.iterations = iterations_;
+    result.total_time = total;
+
+    return result;
   }
 
   auto RequestParserBenchmark::fragmented_request() -> BenchmarkCaseResult {
-    std::chrono::nanoseconds total{}; 
+    const auto start{std::chrono::steady_clock::now()};
 
     for(auto i{0uz}; i < iterations_; ++i) {
       parser_.reset();
 
-      const auto start{std::chrono::steady_clock::now()};
       for(const auto chunk : fragmented_request_)
-        parser_.consume(chunk);
-      const auto end{std::chrono::steady_clock::now()};
+        (void)parser_.consume(chunk);
 
-      total += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
     }
 
-    return BenchmarkCaseResult{
-      .name = "fragmented_request",
-      .iterations = iterations_,
-      .total_time = total
-    };
+    const auto end{std::chrono::steady_clock::now()};
+
+    const auto total{std::chrono::duration_cast<std::chrono::nanoseconds>(end - start) - reset_time_};
+
+    BenchmarkCaseResult result{};
+
+    result.name = "fragmented_request";
+    result.iterations = iterations_;
+    result.total_time = total;
+
+    return result;
   }
 
-  auto RequestParserBenchmark::byte_by_byte_request() -> BenchmarkCaseResult {
-    std::chrono::nanoseconds total{};
+  auto RequestParserBenchmark::byte_by_byte_request() -> BenchmarkCaseResult { 
+
+    const auto start{std::chrono::steady_clock::now()};
     
     for(auto i{0uz}; i < iterations_; ++i) {
       parser_.reset();
 
-      const auto start{std::chrono::steady_clock::now()};
       for(const auto& c : complete_request_)
-        parser_.consume(std::string_view{&c, 1});
-      const auto end{std::chrono::steady_clock::now()};
+        (void)parser_.consume(std::string_view{&c, 1});
 
-      total += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
     }
+    
+    const auto end{std::chrono::steady_clock::now()};
 
-    return BenchmarkCaseResult{
-      .name = "byte_by_byte_request",
-      .iterations = iterations_,
-      .total_time = total
-    };
+    const auto total{std::chrono::duration_cast<std::chrono::nanoseconds>(end - start) - reset_time_};
+
+    BenchmarkCaseResult result{};
+
+    result.name = "byte_by_byte_request";
+    result.iterations = iterations_;
+    result.total_time = total;
+
+    return result;
   }
 
   auto RequestParserBenchmark::malformed_request() -> BenchmarkCaseResult {
-    std::chrono::nanoseconds total{};
+    const auto start{std::chrono::steady_clock::now()};
 
     for(auto i{0uz}; i < iterations_; ++i) {
       parser_.reset();
-
-      const auto start{std::chrono::steady_clock::now()};
-      parser_.consume(malformed_request_);
-      const auto end{std::chrono::steady_clock::now()};
-
-      total += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+      (void)parser_.consume(malformed_request_);
     }
+    const auto end{std::chrono::steady_clock::now()};
 
-    return BenchmarkCaseResult{
-      .name = "malformed_request",
-      .iterations = iterations_,
-      .total_time = total
-    };
+    const auto total{std::chrono::duration_cast<std::chrono::nanoseconds>(end - start) - reset_time_};
+
+    BenchmarkCaseResult result{};
+
+    result.name = "malformed_request";
+    result.iterations = iterations_;
+    result.total_time = total;
+
+    return result;
   }
 
-  auto RequestParserBenchmark::request_with_body() -> BenchmarkCaseResult {
-    std::chrono::nanoseconds total{};
-   
+  auto RequestParserBenchmark::request_with_body() -> BenchmarkCaseResult { 
+    const auto start{std::chrono::steady_clock::now()};
+
     for(auto i{0uz}; i < iterations_; ++i) {
       parser_.reset();
-
-      const auto start{std::chrono::steady_clock::now()};
-      parser_.consume(request_with_body_);
-      const auto end{std::chrono::steady_clock::now()};
-
-      total += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+      (void)parser_.consume(request_with_body_);
     }
 
-    return BenchmarkCaseResult{
-      .name = "request_with_body",
-      .iterations = iterations_,
-      .total_time = total
-    };
+    const auto end{std::chrono::steady_clock::now()};
+
+    const auto total{std::chrono::duration_cast<std::chrono::nanoseconds>(end - start) - reset_time_};
+
+    BenchmarkCaseResult result{};
+
+    result.name = "request_with_body";
+    result.iterations = iterations_;
+    result.total_time = total;
+
+    return result;
   }
 
   auto RequestParserBenchmark::set_case(ReqParserBenchCase bench_case) noexcept -> void {
@@ -148,7 +157,8 @@ namespace benchmark {
   }
 
   auto RequestParserBenchmark::run() -> BenchmarkResult {
-    BenchmarkResult result{.name = std::string{name()}};
+    BenchmarkResult result{};
+    result.name = std::string{name()};
 
     switch(bench_case_) {
       case ReqParserBenchCase::all:

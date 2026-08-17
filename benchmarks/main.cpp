@@ -2,14 +2,14 @@
 #include <print>
 
 auto main() -> int {
-  benchmark::RequestParserBenchmark rp_bench{benchmark::ReqParserBenchCase::all, 100};
+  benchmark::RequestParserBenchmark rp_bench{benchmark::ReqParserBenchCase::all, 100'000};
 
   const auto result{rp_bench.run()};
 
   std::println("{}", result.name);
 
   for(const auto& ca : result.cases) {
-    const auto average_ns{static_cast<double>(ca.total_time.count() / ca.iterations)};
+    const auto average_ns{static_cast<double>(ca.total_time.count()) / static_cast<double>(ca.iterations)};
 
     std::println("name: {}", ca.name);
     std::println("iterations: {}", ca.iterations);
