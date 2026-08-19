@@ -13,8 +13,6 @@ namespace benchmark {
     std::size_t iterations;
     std::size_t samples_count;
 
-    std::chrono::nanoseconds total_time;
-
     std::vector<std::chrono::nanoseconds> samples;
   };
 
