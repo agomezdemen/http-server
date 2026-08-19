@@ -11,20 +11,11 @@ namespace benchmark {
     std::string name;
 
     std::size_t iterations;
-    std::size_t samples;
+    std::size_t samples_count;
 
     std::chrono::nanoseconds total_time;
 
-    double mean_ns;
-    double median_ns;
-    double min_ns;
-    double max_ns;
-    double standard_deviation_ns;
-
-    double p95_ns;
-    double p99_ns;
-
-    double operations_per_second;
+    std::vector<std::chrono::nanoseconds> samples;
   };
 
   struct BenchmarkResult {

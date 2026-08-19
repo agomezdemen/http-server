@@ -5,7 +5,8 @@
 #include "core/benchmark_result.h"
 #include "server/http/parser.h"
 
-#include <chrono>
+#include <array>
+#include <vector>
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
@@ -18,7 +19,11 @@ namespace benchmark {
     fragmented_request,
     byte_by_byte_request,
     malformed_request,
-    request_with_body
+    request_with_body,
+    many_headers,
+    large_body,
+    fragmented_body,
+    long_target
   };
 
   class RequestParserBenchmark final : public Benchmark {
@@ -48,21 +53,112 @@ namespace benchmark {
       "Hello World!"
     };
 
+    static constexpr std::string_view many_headers_request_{
+      "GET / HTTP/1.1\r\n"
+      "Host: localhost\r\n"
+      "User-Agent: http-server-benchmark\r\n"
+      "Accept: text/html,application/json\r\n"
+      "Accept-Language: en-US,en;q=0.9\r\n"
+      "Accept-Encoding: gzip, deflate\r\n"
+      "Connection: keep-alive\r\n"
+      "Cache-Control: no-cache\r\n"
+      "Pragma: no-cache\r\n"
+      "Content-Type: application/json\r\n"
+      "X-Request-Id: 123456789abcdef\r\n"
+      "X-Forwarded-For: 127.0.0.1\r\n"
+      "X-Forwarded-Proto: https\r\n"
+      "X-Client-Version: 1.0.0\r\n"
+      "X-Trace-Id: abcdef0123456789\r\n"
+      "X-Session-Id: benchmark-session\r\n"
+      "X-Feature-Flag: enabled\r\n"
+      "X-Region: us-central\r\n"
+      "X-Environment: benchmark\r\n"
+      "X-Priority: high\r\n"
+      "X-Custom-Header: custom-value\r\n"
+      "\r\n"
+    };
+
+    static constexpr std::string_view long_target_request_{
+      "GET /api/v1/search/resources/items/benchmark/testing/path"
+      "?query=modern-cpp-http-server"
+      "&category=systems-programming"
+      "&language=cpp"
+      "&sort=performance"
+      "&order=descending"
+      "&limit=100"
+      "&offset=1000"
+      "&include=headers,body,metadata,statistics"
+      "&benchmark=request-parser"
+      "&architecture=x86-64"
+      "&platform=linux"
+      "&mode=stress-test"
+      " HTTP/1.1\r\n"
+      "Host: localhost\r\n"
+      "\r\n"
+    };
+
+    static constexpr std::size_t large_body_size_{64 * 1024};
+    static constexpr std::size_t body_chunk_size_{8 * 1024};
+
+    static consteval auto make_large_body_request() {
+      constexpr std::string_view header{
+        "POST /upload HTTP/1.1\r\n"
+        "Host: localhost\r\n"
+        "Content-Length: 65536\r\n"
+        "\r\n"
+      };
+
+      std::array<char, header.size() + large_body_size_> request{};
+
+      for(auto i{0uz}; i < header.size(); ++i)
+        request[i] = header[i];
+
+      for(auto i{0uz}; i < large_body_size_; ++i)
+        request[header.size() + i] = static_cast<char>('a' + (i % 26));
+
+      return request;
+    }
+
+    static constexpr auto large_body_request_{make_large_body_request()};
+
+    static consteval auto make_fragmented_body_request() {
+      constexpr auto body_chunk_count{large_body_size_ / body_chunk_size_};
+      constexpr auto header_size{large_body_request_.size() - large_body_size_};
+
+      std::array<std::string_view, body_chunk_count + 1> chunks{};
+
+      chunks[0] = std::string_view{large_body_request_.data(), header_size};
+
+      for(auto i{0uz}; i < body_chunk_count; ++i) {
+        chunks[i + 1] = std::string_view{
+          large_body_request_.data() + header_size + (i * body_chunk_size_),
+          body_chunk_size_
+        };
+      }
+
+      return chunks;
+    }
+
+    static constexpr auto fragmented_body_request_{make_fragmented_body_request()};
+
+    std::vector<server::http::RequestParser> parsers_;
     ReqParserBenchCase bench_case_;
-    server::http::RequestParser parser_;
-    std::chrono::nanoseconds reset_time_;
 
-    auto measure_reset_cost() -> std::chrono::nanoseconds;
-
+    auto reset_parsers() -> void;
+  
     auto lifecycle() -> BenchmarkCaseResult;
     auto complete_request() -> BenchmarkCaseResult;
     auto fragmented_request() -> BenchmarkCaseResult;
     auto byte_by_byte_request() -> BenchmarkCaseResult;
     auto malformed_request() -> BenchmarkCaseResult;
     auto request_with_body() -> BenchmarkCaseResult;
+    auto many_headers() -> BenchmarkCaseResult;
+    auto large_body() -> BenchmarkCaseResult;
+    auto fragmented_body() -> BenchmarkCaseResult;
+    auto long_target() -> BenchmarkCaseResult;
 
   public:
-    explicit RequestParserBenchmark(ReqParserBenchCase bench_case, std::size_t iterations);
+    explicit RequestParserBenchmark(ReqParserBenchCase bench_case, std::size_t iterations, std::size_t samples);
     auto set_case(ReqParserBenchCase bench_case) noexcept -> void;
     
     auto run() -> BenchmarkResult override;
