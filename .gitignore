@@ -2,6 +2,7 @@ out/
 build/
 build-*/
 cmake-build-*/
+benchmarks/results/
 compile_commands.json
 
 *.o

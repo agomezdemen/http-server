@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <algorithm>
 
+#include "core/statistics.h"
+
 namespace benchmark {
 
   auto mean(std::span<const std::chrono::nanoseconds> samples, std::size_t iterations) -> double {
@@ -16,7 +18,7 @@ namespace benchmark {
     double total{0.0};
     
     for(const auto sample : samples)
-      total += sample.count();
+      total += static_cast<double>(sample.count());
 
     return total / static_cast<double>(sample_count) / static_cast<double>(iterations);
   }
@@ -26,15 +28,14 @@ namespace benchmark {
       return 0.0;
 
     std::vector<std::chrono::nanoseconds> copy{samples.begin(), samples.end()};
+    std::ranges::sort(copy);
 
-    const auto middle{copy.begin() + copy.size() / 2};
+    const auto middle{copy.size() / 2};
 
     if(copy.size() % 2 != 0)
-      return static_cast<double>(middle->count()) / static_cast<double>(iterations);
+      return static_cast<double>(copy[middle].count()) / static_cast<double>(iterations);
 
-    const auto lower{std::max_element(copy.begin(), middle)};
-
-    return (static_cast<double>(lower->count()) + static_cast<double>(middle->count()))
+    return (static_cast<double>(copy[middle - 1].count()) + static_cast<double>(copy[middle].count()))
       / 2.0
       / static_cast<double>(iterations);
   }
@@ -59,19 +60,39 @@ namespace benchmark {
   }
 
   auto percentile(std::span<const std::chrono::nanoseconds> samples, std::size_t iterations, double percentile) -> double {
-    if(samples.empty() || iterations == 0)
+    if(samples.empty() || iterations == 0 || percentile < 0.0 || percentile > 1.0)
       return 0.0;
 
     std::vector<std::chrono::nanoseconds> sorted{samples.begin(), samples.end()};
     std::ranges::sort(sorted);
 
     const auto rank{static_cast<std::size_t>(
-      std::ceil((percentile / 100.0) * static_cast<double>(sorted.size()))
+      std::ceil(percentile * static_cast<double>(sorted.size()))
     )};
 
-    const auto index{rank - 1};
+    const auto index{rank == 0 ? 0 : rank - 1};
 
     return static_cast<double>(sorted[index].count()) / static_cast<double>(iterations);
   }
 
+
+  auto calculate_statistics(const BenchmarkCaseResult& result) -> BenchmarkStatistics {
+    if(result.samples.empty() || result.iterations == 0)
+      return {};
+
+    const auto mean_ns{mean(result.samples, result.iterations)};
+
+    return BenchmarkStatistics{
+      .mean = mean_ns,
+      .median = median(result.samples, result.iterations),
+      .min = static_cast<double>(std::min_element(result.samples.begin(), result.samples.end())->count())
+        / static_cast<double>(result.iterations),
+      .max = static_cast<double>(std::max_element(result.samples.begin(), result.samples.end())->count())
+        / static_cast<double>(result.iterations),
+      .standard_deviation = standard_deviation(result.samples, result.iterations),
+      .p95 = percentile(result.samples, result.iterations, 0.95),
+      .p99 = percentile(result.samples, result.iterations, 0.99),
+      .operations_per_second = mean_ns > 0.0 ? 1'000'000'000.0 / mean_ns : 0.0
+    };
+  }
 }

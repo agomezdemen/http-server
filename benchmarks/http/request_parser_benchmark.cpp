@@ -19,7 +19,7 @@ namespace benchmark {
     
     result.name = "lifecycle";
     result.iterations = iterations_;
-    result.sample_count = samples_;
+    result.samples_count = samples_;
     result.samples.reserve(samples_);
 
     for(auto sample{0uz}; sample < samples_; ++sample) {
@@ -45,7 +45,7 @@ namespace benchmark {
 
     result.name = "complete_request";
     result.iterations = iterations_;
-    result.sample_count = samples_;
+    result.samples_count = samples_;
     result.samples.reserve(samples_);
 
     for(auto sample{0uz}; sample < samples_; ++sample) {
@@ -71,7 +71,7 @@ namespace benchmark {
 
     result.name = "fragmented_request";
     result.iterations = iterations_;
-    result.sample_count = samples_;
+    result.samples_count = samples_;
     result.samples.reserve(samples_);
 
     for(auto sample{0uz}; sample < samples_; ++sample) {
@@ -98,7 +98,7 @@ namespace benchmark {
 
     result.name = "byte_by_byte_request";
     result.iterations = iterations_;
-    result.sample_count = samples_;
+    result.samples_count = samples_;
     result.samples.reserve(samples_);
 
     for(auto sample{0uz}; sample < samples_; ++sample) {
@@ -125,7 +125,7 @@ namespace benchmark {
 
     result.name = "malformed_request";
     result.iterations = iterations_;
-    result.sample_count = samples_;
+    result.samples_count = samples_;
     result.samples.reserve(samples_);
 
     for(auto sample{0uz}; sample < samples_; ++sample) {
@@ -151,7 +151,7 @@ namespace benchmark {
 
     result.name = "request_with_body";
     result.iterations = iterations_;
-    result.sample_count = samples_;
+    result.samples_count = samples_;
     result.samples.reserve(samples_);
 
     for(auto sample{0uz}; sample < samples_; ++sample) {
@@ -178,7 +178,7 @@ namespace benchmark {
 
     result.name = "many_headers";
     result.iterations = iterations_;
-    result.sample_count = samples_;
+    result.samples_count = samples_;
     result.samples.reserve(samples_);
 
     for(auto sample{0uz}; sample < samples_; ++sample) {
@@ -205,7 +205,7 @@ namespace benchmark {
 
     result.name = "large_body";
     result.iterations = iterations_;
-    result.sample_count = samples_;
+    result.samples_count = samples_;
     result.samples.reserve(samples_);
 
     for(auto sample{0uz}; sample < samples_; ++sample) {
@@ -232,7 +232,7 @@ namespace benchmark {
 
     result.name = "fragmented_body";
     result.iterations = iterations_;
-    result.sample_count = samples_;
+    result.samples_count = samples_;
     result.samples.reserve(samples_);
 
     for(auto sample{0uz}; sample < samples_; ++sample) {
@@ -260,7 +260,7 @@ namespace benchmark {
 
     result.name = "long_target";
     result.iterations = iterations_;
-    result.sample_count = samples_;
+    result.samples_count = samples_;
     result.samples.reserve(samples_);
 
     for(auto sample{0uz}; sample < samples_; ++sample) {

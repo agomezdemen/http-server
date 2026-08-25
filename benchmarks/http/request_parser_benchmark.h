@@ -12,6 +12,52 @@
 #include <string_view>
 
 namespace benchmark {
+  namespace request_parser_benchmark_detail {
+    static constexpr std::string_view large_body_header{
+      "POST /upload HTTP/1.1\r\n"
+      "Host: localhost\r\n"
+      "Content-Length: 65536\r\n"
+      "\r\n"
+    };
+
+    static constexpr std::size_t large_body_size{64 * 1024};
+    static constexpr std::size_t body_chunk_size{8 * 1024};
+
+    static constexpr std::size_t large_body_request_size{large_body_header.size() + large_body_size};
+    static constexpr std::size_t body_chunk_count{large_body_size / body_chunk_size};
+
+    static constexpr auto make_large_body_request() -> std::array<char, large_body_request_size> {
+      std::array<char, large_body_request_size> request{};
+
+      for(auto i{0uz}; i < large_body_header.size(); ++i)
+        request[i] = large_body_header[i];
+
+      for(auto i{0uz}; i < large_body_size; ++i)
+        request[large_body_header.size() + i] = static_cast<char>('a' + (i % 26));
+
+      return request;
+    }
+
+    static constexpr auto large_body_request{make_large_body_request()};
+
+    static constexpr auto make_fragmented_body_request() -> std::array<std::string_view, body_chunk_count + 1> {
+      std::array<std::string_view, body_chunk_count + 1> chunks{};
+
+      chunks[0] = std::string_view{large_body_request.data(), large_body_header.size()};
+
+      for(auto i{0uz}; i < body_chunk_count; ++i) {
+        chunks[i + 1] = std::string_view{
+          large_body_request.data() + large_body_header.size() + (i * body_chunk_size),
+          body_chunk_size
+        };
+      }
+
+      return chunks;
+    }
+
+    static constexpr auto fragmented_body_request{make_fragmented_body_request()};
+  }
+
   enum class ReqParserBenchCase : std::uint8_t {
     all,
     lifecycle,
@@ -97,49 +143,8 @@ namespace benchmark {
       "\r\n"
     };
 
-    static constexpr std::size_t large_body_size_{64 * 1024};
-    static constexpr std::size_t body_chunk_size_{8 * 1024};
-
-    static consteval auto make_large_body_request() {
-      constexpr std::string_view header{
-        "POST /upload HTTP/1.1\r\n"
-        "Host: localhost\r\n"
-        "Content-Length: 65536\r\n"
-        "\r\n"
-      };
-
-      std::array<char, header.size() + large_body_size_> request{};
-
-      for(auto i{0uz}; i < header.size(); ++i)
-        request[i] = header[i];
-
-      for(auto i{0uz}; i < large_body_size_; ++i)
-        request[header.size() + i] = static_cast<char>('a' + (i % 26));
-
-      return request;
-    }
-
-    static constexpr auto large_body_request_{make_large_body_request()};
-
-    static consteval auto make_fragmented_body_request() {
-      constexpr auto body_chunk_count{large_body_size_ / body_chunk_size_};
-      constexpr auto header_size{large_body_request_.size() - large_body_size_};
-
-      std::array<std::string_view, body_chunk_count + 1> chunks{};
-
-      chunks[0] = std::string_view{large_body_request_.data(), header_size};
-
-      for(auto i{0uz}; i < body_chunk_count; ++i) {
-        chunks[i + 1] = std::string_view{
-          large_body_request_.data() + header_size + (i * body_chunk_size_),
-          body_chunk_size_
-        };
-      }
-
-      return chunks;
-    }
-
-    static constexpr auto fragmented_body_request_{make_fragmented_body_request()};
+    static constexpr auto large_body_request_{request_parser_benchmark_detail::large_body_request};
+    static constexpr auto fragmented_body_request_{request_parser_benchmark_detail::fragmented_body_request};
 
     std::vector<server::http::RequestParser> parsers_;
     ReqParserBenchCase bench_case_;

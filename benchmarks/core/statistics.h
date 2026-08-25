@@ -25,7 +25,6 @@ namespace benchmark {
   auto percentile(std::span<const std::chrono::nanoseconds> samples, std::size_t iterations, double percentile) -> double;
 
   auto calculate_statistics(const BenchmarkCaseResult& result) -> BenchmarkStatistics;
-
 }
 
 #endif
