@@ -57,10 +57,9 @@ namespace server {
     }
 
     const auto serialized{response.to_string()};
-    const auto bytes_written{connection.write_all(serialized)};
+    // TODO: Queue the response and track partial writes in per-connection state.
 
     std::println("response size: {}", serialized.size());
-    std::println("bytes written: {}", bytes_written);
   }
 
   auto HttpServer::run() -> void { 
