@@ -10,6 +10,7 @@
 #include <string>
 #include <system_error>
 #include <utility>
+#include <optional>
 
 namespace server::net {
 
@@ -61,16 +62,23 @@ TcpListener::TcpListener(Endpoint ep, int backlog)
   }
 }
 
-auto TcpListener::accept() -> TcpConnection {
+auto TcpListener::accept() -> std::optional<TcpConnection> {
   sockaddr_in client_addr{};
   socklen_t client_len{sizeof(client_addr)};
 
-  const auto raw_client_fd{
-      ::accept(sfd_.get(), reinterpret_cast<sockaddr*>(&client_addr), &client_len)};
+  int raw_client_fd{};
+
+  do {
+   raw_client_fd = ::accept4(sfd_.get(), reinterpret_cast<sockaddr*>(&client_addr), &client_len, SOCK_NONBLOCK | SOCK_CLOEXEC);
+  } while(raw_client_fd == -1 && errno == EINTR);
 
   if (raw_client_fd == -1) {
     const auto err{errno};
-    throw std::system_error{err, std::generic_category(), "accept failed"};
+    
+    if(err == EAGAIN || err == EWOULDBLOCK)
+      return std::nullopt;
+
+    throw std::system_error{err, std::generic_category(), "accept4 failed"};
   }
 
   platform::Fd client_fd{raw_client_fd};
@@ -85,7 +93,7 @@ auto TcpListener::accept() -> TcpConnection {
 
   Endpoint peer{std::string{ip_buffer}, ntohs(client_addr.sin_port)};
 
-  return TcpConnection{platform::Fd{std::move(client_fd)}, std::move(peer)};
+  return std::optional<TcpConnection>{TcpConnection{platform::Fd{std::move(client_fd)}, std::move(peer)}};
 }
 
 auto TcpListener::fd() const noexcept -> int { return sfd_.get(); }
