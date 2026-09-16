@@ -14,7 +14,7 @@
 namespace server::net {
 
 TcpListener::TcpListener(Endpoint ep, int backlog)
-    : ep_{std::move(ep)}, sfd_{::socket(AF_INET, SOCK_STREAM, 0)} {
+    : ep_{std::move(ep)}, sfd_{::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0)} {
   if (backlog <= 0) {
     throw std::invalid_argument{"backlog must be positive"};
   }
