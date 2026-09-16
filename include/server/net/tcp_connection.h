@@ -2,6 +2,7 @@
 #define TCP_CONNECTION_H
 
 #include <span>
+#include <optional>
 #include <string_view>
 
 #include "server/net/endpoint.h"
@@ -26,9 +27,8 @@ class TcpConnection {
 
   ~TcpConnection() noexcept = default;
 
-  auto read(std::span<char> buffer) -> std::size_t;
-  auto write(std::string_view data) -> std::size_t;
-  auto write_all(std::string_view data) -> std::size_t;
+  auto read(std::span<char> buffer) -> std::optional<std::size_t>;
+  auto write(std::string_view data) -> std::optional<std::size_t>;
 
   auto fd() const noexcept -> int;
   auto peer_endpoint() const noexcept -> const Endpoint&;

@@ -6,57 +6,55 @@
 #include <stdexcept>
 #include <system_error>
 #include <utility>
+#include <optional>
 
 namespace server::net {
 
 TcpConnection::TcpConnection(platform::Fd cfd, Endpoint peer)
     : peer_{std::move(peer)}, cfd_{std::move(cfd)} {}
 
-auto TcpConnection::read(std::span<char> buffer) -> std::size_t {
-  auto n{::recv(cfd_.get(), buffer.data(), buffer.size(), 0)};
+auto TcpConnection::read(std::span<char> buffer) -> std::optional<std::size_t> {
+  if(buffer.empty()) {
+    throw std::invalid_argument{"read buffer must not be empty"};
+  }
+
+  ssize_t n;
+  do{
+    n = ::recv(cfd_.get(), buffer.data(), buffer.size(), 0);
+  }while(n == -1 && errno == EINTR);
 
   if (n == -1) {
     const auto err{errno};
+
+    if(err == EAGAIN || err == EWOULDBLOCK) {
+      return std::nullopt;
+    }
+
     throw std::system_error{err, std::generic_category(), "recv failed"};
   }
 
   return static_cast<std::size_t>(n);
 }
 
-auto TcpConnection::write(std::string_view data) -> std::size_t {
+auto TcpConnection::write(std::string_view data) -> std::optional<std::size_t> {
   if (data.empty()) return 0;
 
-  auto n{::send(cfd_.get(), data.data(), data.size(), MSG_NOSIGNAL)};
+  ssize_t n;
+  do{
+    n = ::send(cfd_.get(), data.data(), data.size(), MSG_NOSIGNAL);
+  }while(n == -1 && errno == EINTR);
 
   if (n == -1) {
     const auto err{errno};
+
+    if(err == EAGAIN || err == EWOULDBLOCK) {
+      return std::nullopt;
+    }
+
     throw std::system_error{err, std::generic_category(), "send failed"};
   }
 
   return static_cast<std::size_t>(n);
-}
-
-auto TcpConnection::write_all(std::string_view data) -> std::size_t {
-  auto total_written{0uz};
-
-  // Keep sending until the caller's full buffer has been accepted by the kernel.
-  while (!data.empty()) {
-    const auto n{::send(cfd_.get(), data.data(), data.size(), MSG_NOSIGNAL)};
-
-    if (n == -1) {
-      const auto err{errno};
-      throw std::system_error{err, std::generic_category(), "send failed"};
-    }
-
-    if (n == 0) throw std::runtime_error{"send wrote 0 bytes"};
-
-    const auto bytes_written{static_cast<std::size_t>(n)};
-
-    total_written += bytes_written;
-    data.remove_prefix(bytes_written);
-  }
-
-  return total_written;
 }
 
 auto TcpConnection::fd() const noexcept -> int { return cfd_.get(); }

@@ -93,7 +93,7 @@ auto TcpListener::accept() -> std::optional<TcpConnection> {
 
   Endpoint peer{std::string{ip_buffer}, ntohs(client_addr.sin_port)};
 
-  return std::optional<TcpConnection>{TcpConnection{platform::Fd{std::move(client_fd)}, std::move(peer)}};
+  return TcpConnection{platform::Fd{std::move(client_fd)}, std::move(peer)};
 }
 
 auto TcpListener::fd() const noexcept -> int { return sfd_.get(); }
