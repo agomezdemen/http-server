@@ -4,6 +4,8 @@
 #include "server/net/tcp_connection.h"
 #include "server/platform/fd.h"
 
+#include <optional>
+
 namespace server::net {
 
 // Owns a listening TCP socket for one endpoint.
@@ -21,7 +23,7 @@ class TcpListener {
   TcpListener(TcpListener&&) noexcept = default;
   auto operator=(TcpListener&&) noexcept -> TcpListener& = default;
 
-  auto accept() -> TcpConnection;
+  auto accept() -> std::optional<TcpConnection>;
 
   auto fd() const noexcept -> int;
   auto endpoint() const noexcept -> const Endpoint&;

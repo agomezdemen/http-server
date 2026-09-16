@@ -43,5 +43,7 @@ auto main(int argc, char* argv[]) -> int {
       return response;}))
     return 1;
 
+  server::HttpServer server{ep, router};
 
+  server.run();
 }
