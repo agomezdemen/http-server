@@ -19,7 +19,11 @@ include(cmake/Sanitizers.cmake)
 # Core server code lives in a library so the app, tests, and future benchmarks
 # can all link the same implementation.
 add_library(server_core
+    src/http_server.cpp
+
     src/platform/fd.cpp
+    src/platform/epoll.cpp
+
     src/net/endpoint.cpp
     src/net/tcp_listener.cpp
     src/net/tcp_connection.cpp

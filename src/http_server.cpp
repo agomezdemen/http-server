@@ -22,7 +22,7 @@ namespace server {
     while(parse_result == http::ParseStatus::need_more_data) {
       std::array<char, 4096> buffer{};
 
-      const auto n{connection.read(buffer)};
+      const auto n{connection.read(buffer).value()};
       if(n == 0uz) {
         peer_closed = true;
         break;
@@ -69,7 +69,7 @@ namespace server {
       auto connection{listener_.accept()};
 
       try {
-        handle_connection(std::move(connection));
+        handle_connection(std::move(connection.value()));
       } catch(const std::exception& e) {
         std::println("error: {}", e.what());
       } 

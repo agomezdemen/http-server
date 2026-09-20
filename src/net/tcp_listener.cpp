@@ -64,12 +64,14 @@ TcpListener::TcpListener(Endpoint ep, int backlog)
 
 auto TcpListener::accept() -> std::optional<TcpConnection> {
   sockaddr_in client_addr{};
-  socklen_t client_len{sizeof(client_addr)};
+  socklen_t client_len;
 
   int raw_client_fd{};
 
   do {
-   raw_client_fd = ::accept4(sfd_.get(), reinterpret_cast<sockaddr*>(&client_addr), &client_len, SOCK_NONBLOCK | SOCK_CLOEXEC);
+    client_len = sizeof(client_addr);
+
+    raw_client_fd = ::accept4(sfd_.get(), reinterpret_cast<sockaddr*>(&client_addr), &client_len, SOCK_NONBLOCK | SOCK_CLOEXEC);
   } while(raw_client_fd == -1 && errno == EINTR);
 
   if (raw_client_fd == -1) {
@@ -87,13 +89,12 @@ auto TcpListener::accept() -> std::optional<TcpConnection> {
 
   if (::inet_ntop(AF_INET, &client_addr.sin_addr, ip_buffer, sizeof(ip_buffer)) == nullptr) {
     const auto err{errno};
-    ::close(client_fd.release());
     throw std::system_error{err, std::generic_category(), "inet_ntop failed"};
   }
 
   Endpoint peer{std::string{ip_buffer}, ntohs(client_addr.sin_port)};
 
-  return TcpConnection{platform::Fd{std::move(client_fd)}, std::move(peer)};
+  return TcpConnection{std::move(client_fd), std::move(peer)};
 }
 
 auto TcpListener::fd() const noexcept -> int { return sfd_.get(); }

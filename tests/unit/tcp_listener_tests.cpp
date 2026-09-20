@@ -93,10 +93,13 @@ TEST_CASE("Accept returns a usable TcpConnection", "[unit][tcp_listener]") {
 
   platform::Fd client_fd{connected_client(listener)};
 
-  net::TcpConnection accepted_conn{listener.accept()};
+  auto accepted_conn = listener.accept();
+  REQUIRE(accepted_conn.has_value());
+  REQUIRE(accepted_conn->valid());
 
-  const auto bytes_written{accepted_conn.write("x")};
-  REQUIRE(bytes_written == 1);
+  const auto bytes_written{accepted_conn->write("x")};
+  REQUIRE(bytes_written.has_value());
+  REQUIRE(*bytes_written == 1);
 
   std::array<char, 2> response{};
   const auto bytes_read{::read(client_fd.get(), response.data(), 1)};
@@ -111,20 +114,24 @@ TEST_CASE("Accepted TcpConnection can communicate", "[unit][tcp_listener]") {
 
   platform::Fd client_fd{connected_client(listener)};
 
-  net::TcpConnection accepted_conn{listener.accept()};
+  auto accepted_conn = listener.accept();
+  REQUIRE(accepted_conn.has_value());
+  REQUIRE(accepted_conn->valid());
 
   // Client -> accepted connection
   REQUIRE(::write(client_fd.get(), "hello", 5) == 5);
 
   std::array<char, 6> buffer{};
-  const auto bytes_read{accepted_conn.read(std::span<char>{buffer.data(), 5})};
+  const auto bytes_read{accepted_conn->read(std::span<char>{buffer.data(), 5})};
 
-  REQUIRE(bytes_read == 5);
+  REQUIRE(bytes_read.has_value());
+  REQUIRE(*bytes_read == 5);
   REQUIRE(std::string_view{buffer.data(), 5} == "hello");
 
   // Accepted connection -> client
-  const auto bytes_written{accepted_conn.write("world")};
-  REQUIRE(bytes_written == 5);
+  const auto bytes_written{accepted_conn->write("world")};
+  REQUIRE(bytes_written.has_value());
+  REQUIRE(*bytes_written == 5);
 
   std::array<char, 6> response{};
   const auto response_read{::read(client_fd.get(), response.data(), 5)};
@@ -151,4 +158,19 @@ TEST_CASE("Move behavior works indirectly", "[unit][tcp_listener]") {
 TEST_CASE("Not copy constructible", "[unit][tcp_listener]") {
   static_assert(!std::is_copy_constructible_v<net::TcpListener>);
   static_assert(!std::is_copy_assignable_v<net::TcpListener>);
+}
+
+TEST_CASE("Accept returns nullopt when no client is pending", "[unit][tcp_listener]") {
+  net::TcpListener listener{net::Endpoint{"127.0.0.1", 0}};
+
+  REQUIRE_FALSE(listener.accept().has_value());
+
+  // An empty queue must not prevent accepting a later connection.
+  const auto client = connected_client(listener);
+  auto connection = listener.accept();
+  REQUIRE(connection.has_value());
+  REQUIRE(connection->valid());
+
+  // Once the pending connection has been accepted, the queue is empty again.
+  REQUIRE_FALSE(listener.accept().has_value());
 }
