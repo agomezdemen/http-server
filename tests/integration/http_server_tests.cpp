@@ -126,3 +126,21 @@ TEST_CASE("integration: server returns not found for unknown route", "[integrati
           "\r\n"
           "Not Found");
 }
+
+TEST_CASE("server serves another client while one connection is idle", "[integration][server]") {
+  constexpr std::uint16_t port{18080};
+  ServerProcess server{HTTP_SERVER_EXECUTABLE, port};
+  REQUIRE(server.wait_until_ready(std::chrono::seconds{1}));
+
+  HttpClient idle_client{"127.0.0.1", port};
+  HttpClient active_client{"127.0.0.1", port};
+  const auto response = active_client.send_request(
+      "GET /health HTTP/1.1\r\nHost: localhost\r\n\r\n");
+  REQUIRE(response.starts_with("HTTP/1.1 200 OK\r\n"));
+  REQUIRE(response.ends_with("\r\n\r\nOK"));
+
+  const auto later_response = idle_client.send_request(
+      "GET /health HTTP/1.1\r\nHost: localhost\r\n\r\n");
+  REQUIRE(later_response.starts_with("HTTP/1.1 200 OK\r\n"));
+  REQUIRE(later_response.ends_with("\r\n\r\nOK"));
+}
