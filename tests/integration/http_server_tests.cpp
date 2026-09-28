@@ -26,12 +26,21 @@ TEST_CASE("server responds to a valid GET request", "[integration][server]") {
 
   HttpClient client{"127.0.0.1", port};
   
-  constexpr std::string_view request{
-    "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"};
+  std::string_view request;
+  SECTION("explicit close") {
+    request = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
+  }
+  SECTION("default HTTP/1.1 persistence") {
+    request = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
+  }
+  SECTION("explicit keep-alive") {
+    request = "GET / HTTP/1.1\r\nHost: localhost\r\nConnection: keep-alive\r\n\r\n";
+  }
 
   const auto response{client.send_request(request)};
 
   REQUIRE(response.starts_with("HTTP/1.1 200 OK\r\n"));
+  REQUIRE(response.find("\r\nConnection: close\r\n") < response.find("\r\n\r\n"));
   REQUIRE(response.find("Content-Length: 12\r\n") != std::string::npos);
   REQUIRE(response.ends_with("\r\n\r\nHello world!"));
 }
@@ -69,6 +78,7 @@ TEST_CASE("server responds with bad request to malformed HTTP", "[integration][s
   const auto response{client.send_request(request)};
 
   REQUIRE(response.starts_with("HTTP/1.1 400 Bad Request\r\n"));
+  REQUIRE(response.find("\r\nConnection: close\r\n") < response.find("\r\n\r\n"));
   REQUIRE(response.find("Content-Length: 11\r\n") != std::string::npos);
   REQUIRE(response.ends_with("\r\n\r\nBad Request"));
 }
@@ -86,6 +96,7 @@ TEST_CASE("integration: server routes GET health", "[integration][server][router
 
   REQUIRE(response ==
           "HTTP/1.1 200 OK\r\n"
+          "Connection: close\r\n"
           "Content-Length: 2\r\n"
           "\r\n"
           "OK");
@@ -104,6 +115,7 @@ TEST_CASE("integration: server ignores query string when routing", "[integration
 
   REQUIRE(response ==
           "HTTP/1.1 200 OK\r\n"
+          "Connection: close\r\n"
           "Content-Length: 2\r\n"
           "\r\n"
           "OK");
@@ -122,6 +134,7 @@ TEST_CASE("integration: server returns not found for unknown route", "[integrati
 
   REQUIRE(response ==
           "HTTP/1.1 404 Not Found\r\n"
+          "Connection: close\r\n"
           "Content-Length: 9\r\n"
           "\r\n"
           "Not Found");

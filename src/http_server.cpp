@@ -53,6 +53,8 @@ namespace server {
       response.set_body("Bad Request");
     }
 
+    // Each connection serves one request; advertise the close to HTTP/1.1 clients.
+    response.set_header("Connection", "close");
     state.output = response.to_string();
     state.write_offset = 0;
     epoll_.modify(state.connection.fd(), EPOLLOUT);

@@ -5,6 +5,7 @@
 #include "server/platform/fd.h"
 
 #include <optional>
+#include <sys/socket.h>
 
 namespace server::net {
 
@@ -16,7 +17,7 @@ class TcpListener {
   platform::Fd sfd_;
 
  public:
-  explicit TcpListener(Endpoint ep, int backlog = 128);
+  explicit TcpListener(Endpoint ep, int backlog = SOMAXCONN);
 
   TcpListener(const TcpListener&) = delete;
   auto operator=(const TcpListener&) -> TcpListener& = delete;

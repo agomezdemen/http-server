@@ -9,6 +9,7 @@
 #include "server/platform/epoll.h"
 
 #include <string>
+#include <sys/socket.h>
 #include <unordered_map>
 
 namespace http = server::http;
@@ -34,7 +35,7 @@ namespace server {
     auto handle_connection(ConnectionState& state) -> bool;
 
   public:
-    HttpServer(net::Endpoint endpoint, http::Router router, int backlog = 128);
+    HttpServer(net::Endpoint endpoint, http::Router router, int backlog = SOMAXCONN);
 
     auto run() -> void;
   };
